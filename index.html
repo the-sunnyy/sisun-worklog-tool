@@ -481,15 +481,13 @@ function buildLogLine(row) {
 
   if (materialType.includes('비즈보드') && materialType.includes('스마트채널')) {
     parts.push(`비즈보드 set ${veri || image}종`);
-  } else if (image > 0) {
-    parts.push(`신규 ${image}종, 베리 ${veri}종`);
-  } else if (veri > 0) {
-    parts.push(`베리 ${veri}종`);
   } else {
-    parts.push(`베리 0종`);
+    if (image > 0) parts.push(`신규 ${image}종`);
+    if (veri > 0) parts.push(`베리 ${veri}종`);
   }
 
-  return `- 시선 [${label}] ${parts.join(', ')} 제작/전달`;
+  const countsText = parts.length > 0 ? `${parts.join(', ')} ` : '';
+  return `- 시선 [${label}] ${countsText}제작/전달`;
 }
 
 /* 완료 여부와 무관하게 전체 행을 주차별로 집계 (신규/베리/비즈보드세트/영상 종수) */
