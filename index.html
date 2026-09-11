@@ -171,6 +171,8 @@
   .card.stats button.ghost{ color:var(--stats-accent); }
   .card.stats button.ghost:hover{ background:var(--stats-th-bg); }
 
+  .card.group::before{ background:var(--group-accent, var(--gradient-violet)); }
+
   .card.blocka{ box-shadow:var(--shadow-md), inset 0 0 0 2px var(--blue-soft); }
   .card.blocka::before{ background:var(--gradient-blue); }
   .card.blockb{ background:linear-gradient(180deg, var(--blockb-soft), var(--surface) 60%); border-color:var(--blockb-border); }
@@ -223,6 +225,12 @@
   .badge.danger{ background:var(--danger-soft); color:var(--danger); }
   .badge.ok{ background:var(--ok-soft); color:var(--ok); }
   .badge.dim{ background:var(--surface-2); color:var(--text-faint); }
+  .badge.s-blue{ background:var(--blue-soft); color:var(--blue-ink); }
+  .badge.s-violet{ background:var(--violet-soft); color:var(--violet-ink); }
+  .badge.s-green{ background:var(--ok-soft); color:var(--ok); }
+  .badge.s-amber{ background:var(--warn-soft); color:var(--warn); }
+  .badge.s-rose{ background:var(--danger-soft); color:var(--danger); }
+  .badge.new{ background:var(--ok-soft); color:var(--ok); margin-left:6px; }
 
   table{ border-collapse:collapse; width:100%; font-size:14px; }
   th, td{ border-bottom:1px solid var(--border); padding:9px 10px; text-align:left; white-space:nowrap; }
@@ -236,6 +244,12 @@
   tr.flag-dup td{ background:var(--danger-soft); }
   tr.flag-review:hover td, tr.flag-dup:hover td{ background:var(--warn-soft); }
   tr.flag-dup:hover td{ background:var(--danger-soft); }
+  tr.flag-new td{ background:var(--ok-soft); }
+  tr.flag-new:hover td{ background:var(--ok-soft); }
+  tr.flag-new td:first-child{ box-shadow:inset 3px 0 0 var(--ok); }
+  .card.new-items{ background:linear-gradient(180deg, var(--ok-soft), var(--surface) 60%); border-color:var(--stats-border); }
+  .card.new-items::before{ background:var(--gradient-green); }
+  .card.new-items .eyebrow{ color:var(--ok); }
   tr.flag-review td:first-child{ box-shadow:inset 3px 0 0 var(--warn); }
   tr.flag-dup td:first-child{ box-shadow:inset 3px 0 0 var(--danger); }
 
@@ -394,6 +408,34 @@ function extractSheetId(input) {
    TAB 1: 시선 업무일지 정리 (기존 기능 그대로)
    ========================================================= */
 const S_STORAGE_KEY = 'sisun-worklog-settings';
+const S_SEEN_KEY = 'sisun-worklog-seen-items';
+
+const S_STATUS_PALETTE = ['s-blue', 's-violet', 's-green', 's-amber', 's-rose'];
+const S_STATUS_ACCENT = {
+  's-blue': 'var(--blue-ink)',
+  's-violet': 'var(--violet-ink)',
+  's-green': 'var(--ok)',
+  's-amber': 'var(--warn)',
+  's-rose': 'var(--danger)',
+};
+function s_statusClass(status){
+  let hash = 0;
+  for (let i = 0; i < status.length; i++) hash = (hash * 31 + status.charCodeAt(i)) >>> 0;
+  return S_STATUS_PALETTE[hash % S_STATUS_PALETTE.length];
+}
+function s_itemId(row){
+  return `${row.brand}|${row.campaign}|${row.materialType}`;
+}
+function s_loadSeenIds(sheetId, tabName){
+  const all = JSON.parse(localStorage.getItem(S_SEEN_KEY) || '{}');
+  const entry = all[`${sheetId}::${tabName}`];
+  return entry ? new Set(entry.ids) : null; // null = 이 탭 첫 정리(비교 기준 없음)
+}
+function s_saveSeenIds(sheetId, tabName, ids){
+  const all = JSON.parse(localStorage.getItem(S_SEEN_KEY) || '{}');
+  all[`${sheetId}::${tabName}`] = { ids: Array.from(ids), savedAt: new Date().toISOString() };
+  localStorage.setItem(S_SEEN_KEY, JSON.stringify(all));
+}
 
 function s_loadSettings(){
   const saved = JSON.parse(localStorage.getItem(S_STORAGE_KEY) || '{}');
@@ -554,12 +596,19 @@ async function s_run() {
 
       if (!groups[status]) groups[status] = [];
       groups[status].push(line);
-      tableRows.push({ status, date: dateStr, label: `${row.brand}-${row.campaign}` });
+      tableRows.push({ status, date: dateStr, label: `${row.brand}-${row.campaign}`, id: s_itemId(row) });
     }
 
     const aggregate = s_aggregate(values, headerIdx, col);
 
-    s_renderResult(tableRows, groups, aggregate, tabName);
+    const prevIds = s_loadSeenIds(sheetId, tabName);
+    const currentIds = new Set(tableRows.map(r => r.id));
+    if (prevIds) {
+      tableRows.forEach(r => { r.isNew = !prevIds.has(r.id); });
+    }
+    s_saveSeenIds(sheetId, tabName, currentIds);
+
+    s_renderResult(tableRows, groups, aggregate, tabName, prevIds !== null);
   } catch (e) {
     $('s_log').textContent = '오류: ' + e.message;
   } finally {
@@ -600,25 +649,49 @@ function s_renderAggregate(aggregate, tabName) {
   return html;
 }
 
-function s_renderResult(tableRows, groups, aggregate, tabName) {
+function s_statusBadge(status){
+  const cls = s_statusClass(status);
+  return `<span class="badge ${cls}">${status}</span>`;
+}
+
+function s_renderResult(tableRows, groups, aggregate, tabName, hasBaseline) {
   let html = '';
 
   html += s_sectionDivider(1, '진행중 항목 한눈에 보기');
+
+  if (hasBaseline) {
+    const newRows = tableRows.filter(r => r.isNew);
+    if (newRows.length > 0) {
+      html += `<div class="card new-items"><div class="eyebrow">지난 정리 이후 추가됨</div><h2>새로 추가된 항목 ${newRows.length}건</h2>`;
+      html += '<div class="tbl-wrap"><table><tr><th>상태</th><th>날짜</th><th>브랜드-기획전명</th></tr>';
+      newRows.forEach(r => {
+        html += `<tr class="flag-new"><td>${s_statusBadge(r.status)}</td><td>${r.date}</td><td>${r.label}</td></tr>`;
+      });
+      html += '</table></div></div>';
+    } else {
+      html += '<div class="card new-items"><div class="eyebrow">지난 정리 이후 추가됨</div><h2>새로 추가된 항목 없음</h2>';
+      html += '<p style="color:var(--text-faint); font-size:14px; margin:0;">지난 정리하기 이후 새로 들어온 항목이 없습니다.</p></div>';
+    }
+  }
+
   html += '<div class="card"><div class="eyebrow">원본 확인용 표</div><h2>완료 아닌 항목 목록</h2>';
   if (tableRows.length === 0) {
     html += '<p style="color:var(--text-faint); font-size:14px;">완료 아닌 항목이 없습니다 — 전부 완료 상태입니다.</p></div>';
   } else {
     html += '<div class="tbl-wrap"><table><tr><th>상태</th><th>날짜</th><th>브랜드-기획전명</th></tr>';
     tableRows.forEach(r => {
-      html += `<tr><td>${r.status}</td><td>${r.date}</td><td>${r.label}</td></tr>`;
+      const rowCls = r.isNew ? ' class="flag-new"' : '';
+      const newTag = r.isNew ? '<span class="badge new">NEW</span>' : '';
+      html += `<tr${rowCls}><td>${s_statusBadge(r.status)}</td><td>${r.date}</td><td>${r.label}${newTag}</td></tr>`;
     });
     html += '</table></div></div>';
 
     html += s_sectionDivider(2, '상태별 복사용 로그');
     Object.keys(groups).forEach(status => {
       const text = groups[status].join('\n');
-      html += `<div class="card group"><div class="eyebrow">복사해서 업무일지에 붙여넣기</div>`;
-      html += `<h2>${status}</h2>`;
+      const accent = S_STATUS_ACCENT[s_statusClass(status)];
+      html += `<div class="card group" style="--group-accent:${accent}"><div class="eyebrow">복사해서 업무일지에 붙여넣기</div>`;
+      html += `<h2>${s_statusBadge(status)}</h2>`;
       html += `<pre>${text}</pre>`;
       html += `<div class="row-actions"><button class="ghost copy" data-text="${encodeURIComponent(text)}">복사</button></div>`;
       html += '</div>';
