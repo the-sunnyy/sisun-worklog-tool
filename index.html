@@ -483,21 +483,29 @@ function s_aggregate(values, headerIdx, col) {
   return { byWeek, monthTotal };
 }
 
+function s_saveSettings(){
+  localStorage.setItem(S_STORAGE_KEY, JSON.stringify({
+    sheetId: $('s_sheetId').value.trim(),
+    tabName: $('s_tabName').value.trim(),
+    apiKey: $('s_apiKey').value.trim(),
+  }));
+}
+
 async function s_run() {
   $('s_log').textContent = '';
   $('s_result').innerHTML = '';
+  s_saveSettings();
+
+  const sheetId = extractSheetId($('s_sheetId').value.trim());
+  const tabName = $('s_tabName').value.trim();
+  const apiKey = $('s_apiKey').value.trim();
+  if (!sheetId || !tabName || !apiKey) {
+    $('s_log').textContent = '시트 주소, 탭 이름, API 키를 모두 입력해주세요.';
+    return;
+  }
+
   $('s_runBtn').disabled = true;
-
   try {
-    const sheetId = extractSheetId($('s_sheetId').value.trim());
-    const tabName = $('s_tabName').value.trim();
-    const apiKey = $('s_apiKey').value.trim();
-    if (!sheetId || !tabName || !apiKey) {
-      $('s_log').textContent = '시트 주소, 탭 이름, API 키를 모두 입력해주세요.';
-      return;
-    }
-    localStorage.setItem(S_STORAGE_KEY, JSON.stringify({ sheetId: $('s_sheetId').value.trim(), tabName, apiKey }));
-
     const range = encodeURIComponent(`${tabName}!A1:Q300`);
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
     const res = await fetch(url);
@@ -554,8 +562,9 @@ async function s_run() {
     s_renderResult(tableRows, groups, aggregate, tabName);
   } catch (e) {
     $('s_log').textContent = '오류: ' + e.message;
+  } finally {
+    $('s_runBtn').disabled = false;
   }
-  $('s_runBtn').disabled = false;
 }
 
 function s_aggRowText(label, b) {
@@ -637,6 +646,7 @@ function bindCopyButtons(scope){
 }
 
 $('s_runBtn').onclick = s_run;
+['s_sheetId', 's_tabName', 's_apiKey'].forEach(id => $(id).addEventListener('input', s_saveSettings));
 
 /* =========================================================
    TAB 2: 일일 로그 → 트래킹 시트 (디자인 2팀)
@@ -983,6 +993,7 @@ function t_renderResult(rows, excluded){
 }
 
 $('t_parseBtn').onclick = t_parse;
+['t_owner', 't_sheetId', 't_tabName', 't_apiKey', 't_lookback'].forEach(id => $(id).addEventListener('input', t_saveSettings));
 
 window.onload = () => { s_loadSettings(); t_loadSettings(); };
 </script>
