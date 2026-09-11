@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>업무일지 도구</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  :root{
+    --bg: #f2f0ea;
+    --surface: #ffffff;
+    --surface-2: #f7f5ef;
+    --border: rgba(23,22,19,0.08);
+    --text: #17161c;
+    --text-dim: #6f6d68;
+    --text-faint: #a5a29a;
+    --shadow-sm: 0 1px 2px rgba(23,22,19,0.05);
+    --shadow-md: 0 14px 32px -14px rgba(23,22,19,0.16), 0 2px 6px rgba(23,22,19,0.05);
+
+    --blue: #3654f4;
+    --blue-soft: #e9edff;
+    --blue-ink: #2c40c9;
+    --violet: #9b3ff2;
+    --violet-soft: #f3e9fe;
+    --violet-ink: #7c2fd0;
+    --green: #12b76a;
+    --green-soft: #e2f9ee;
+    --green-ink: #0c9159;
+    --amber: #f59e0b;
+    --amber-soft: #fef3dd;
+    --rose: #f4356a;
+    --rose-soft: #fde5ec;
+
+    --accent: var(--blue);
+    --accent-soft: var(--blue-soft);
+    --accent-ink: var(--blue-ink);
+    --accent-contrast: #ffffff;
+    --warn: #b3760a;
+    --warn-soft: var(--amber-soft);
+    --danger: var(--rose);
+    --danger-soft: var(--rose-soft);
+    --ok: var(--green-ink);
+    --ok-soft: var(--green-soft);
+    --stats-accent: var(--green-ink);
+    --stats-soft: var(--green-soft);
+    --stats-border: rgba(18,183,106,0.22);
+    --stats-th-bg: #d7f3e5;
+    --blockb-accent: var(--violet-ink);
+    --blockb-soft: var(--violet-soft);
+    --blockb-border: rgba(155,63,242,0.20);
+    --blockb-th-bg: #ecdcfc;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+
+    --gradient-brand: linear-gradient(135deg, #2c3fce 0%, #5b3fe0 100%);
+    --gradient-blue: linear-gradient(135deg, #2544c9 0%, #5171f2 100%);
+    --gradient-violet: linear-gradient(135deg, #7a2fd4 0%, #a855f7 100%);
+    --gradient-green: linear-gradient(135deg, #0d9a5a 0%, #34d399 100%);
+    --gradient-amber: linear-gradient(135deg, #d1830a 0%, #f5b83d 100%);
+    --gradient-rose: linear-gradient(135deg, #cc2457 0%, #f4547e 100%);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #131316;
+      --surface: #1d1d21;
+      --surface-2: #232327;
+      --border: rgba(255,255,255,0.08);
+      --text: #f1f0ee;
+      --text-dim: #a6a4a0;
+      --text-faint: #6f6d69;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow-md: 0 16px 36px -16px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.3);
+      --blue: #7c92ff;
+      --blue-soft: #232a4a;
+      --blue-ink: #a9b6ff;
+      --violet: #c399fb;
+      --violet-soft: #2b2138;
+      --violet-ink: #d2b3fc;
+      --green: #4ed99a;
+      --green-soft: #182d24;
+      --green-ink: #7fe6b6;
+      --amber-soft: #382c17;
+      --rose-soft: #3a1e28;
+      --accent-contrast: #14141a;
+      --warn: #e2b566;
+      --danger: #f28aa6;
+      --ok: #7fe6b6;
+      --stats-border: rgba(78,217,154,0.28);
+      --stats-th-bg: #1f3b2d;
+      --blockb-border: rgba(195,153,251,0.28);
+      --blockb-th-bg: #33253f;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #131316;
+    --surface: #1d1d21;
+    --surface-2: #232327;
+    --border: rgba(255,255,255,0.08);
+    --text: #f1f0ee;
+    --text-dim: #a6a4a0;
+    --text-faint: #6f6d69;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 16px 36px -16px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.3);
+    --blue: #7c92ff;
+    --blue-soft: #232a4a;
+    --blue-ink: #a9b6ff;
+    --violet: #c399fb;
+    --violet-soft: #2b2138;
+    --violet-ink: #d2b3fc;
+    --green: #4ed99a;
+    --green-soft: #182d24;
+    --green-ink: #7fe6b6;
+    --amber-soft: #382c17;
+    --rose-soft: #3a1e28;
+    --accent-contrast: #14141a;
+    --warn: #e2b566;
+    --danger: #f28aa6;
+    --ok: #7fe6b6;
+    --stats-border: rgba(78,217,154,0.28);
+    --stats-th-bg: #1f3b2d;
+    --blockb-border: rgba(195,153,251,0.28);
+    --blockb-th-bg: #33253f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:"Pretendard", -apple-system, "Noto Sans KR", sans-serif;
+    font-size:14px; line-height:1.6; letter-spacing:-0.003em;
+  }
+  .shell{ max-width:1100px; margin:0 auto; padding:40px 24px 90px; }
+  header.top{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:26px; flex-wrap:wrap; }
+  header.top h1{ font-size:21px; font-weight:800; margin:0; letter-spacing:-0.02em; }
+  header.top .sub{ font-size:12px; color:var(--text-faint); }
+
+  nav.tabs{ display:flex; gap:8px; margin-bottom:28px; background:var(--surface-2); padding:6px; border-radius:16px; width:fit-content; box-shadow:inset 0 0 0 1px var(--border); }
+  nav.tabs button{
+    appearance:none; cursor:pointer; font-family:inherit;
+    padding:10px 20px; font-size:13.5px; font-weight:700;
+    border-radius:11px; border:none; background:transparent; color:var(--text-dim);
+    transition:background 0.15s, color 0.15s, box-shadow 0.15s;
+  }
+  nav.tabs button:hover:not(.active){ color:var(--text); }
+  nav.tabs button[data-tab="sisun"].active{ background:var(--gradient-blue); color:#fff; box-shadow:var(--shadow-md); }
+  nav.tabs button[data-tab="tracking"].active{ background:var(--gradient-violet); color:#fff; box-shadow:var(--shadow-md); }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+
+  .card{ position:relative; background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:24px 26px; margin-bottom:20px; box-shadow:var(--shadow-md); overflow:hidden; }
+  .card::before{ content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--gradient-blue); }
+  #panel-tracking .card:not(.stats):not(.blocka):not(.blockb)::before{ background:var(--gradient-violet); }
+  .card h2{ font-size:15px; margin:0 0 4px; font-weight:800; letter-spacing:-0.01em; }
+  .card .desc{ font-size:12.5px; color:var(--text-faint); margin-bottom:16px; line-height:1.65; }
+  .eyebrow{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:800; letter-spacing:0.02em; color:var(--blue); margin-bottom:8px; }
+  .eyebrow::before{ content:''; width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
+
+  .section-divider{ display:flex; align-items:center; gap:12px; margin:32px 0 16px; }
+  .section-divider .num{ width:26px; height:26px; border-radius:50%; background:var(--gradient-blue); color:#fff; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:var(--shadow-md); }
+  .section-divider .title{ font-size:14.5px; font-weight:800; letter-spacing:-0.01em; }
+  .section-divider .line{ flex:1; height:1px; background:var(--border); }
+  .section-divider .num.stats{ background:var(--gradient-green); }
+  .section-divider .title.stats{ color:var(--stats-accent); }
+
+  .card.stats{ background:linear-gradient(180deg, var(--stats-soft), var(--surface) 60%); border-color:var(--stats-border); }
+  .card.stats::before{ background:var(--gradient-green); }
+  .card.stats .eyebrow{ color:var(--stats-accent); }
+  .card.stats th{ background:var(--stats-th-bg); }
+  .card.stats td, .card.stats th{ border-color:var(--stats-border); }
+  .card.stats pre{ background:var(--stats-th-bg); border-color:var(--stats-border); }
+  .card.stats button.ghost{ color:var(--stats-accent); }
+  .card.stats button.ghost:hover{ background:var(--stats-th-bg); }
+
+  .card.blocka{ box-shadow:var(--shadow-md), inset 0 0 0 2px var(--blue-soft); }
+  .card.blocka::before{ background:var(--gradient-blue); }
+  .card.blockb{ background:linear-gradient(180deg, var(--blockb-soft), var(--surface) 60%); border-color:var(--blockb-border); }
+  .card.blockb::before{ background:var(--gradient-violet); }
+  .card.blockb .eyebrow{ color:var(--blockb-accent); }
+  .card.blockb th{ background:var(--blockb-th-bg); }
+  .card.blockb td, .card.blockb th{ border-color:var(--blockb-border); }
+  .card.blockb button.ghost{ color:var(--blockb-accent); }
+  .card.blockb button.ghost:hover{ background:var(--blockb-th-bg); }
+
+  .step-badge{ display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; font-size:12px; font-weight:800; margin-right:8px; color:#fff; }
+  .step-badge.a{ background:var(--gradient-blue); box-shadow:var(--shadow-sm); }
+  .step-badge.b{ background:var(--gradient-violet); box-shadow:var(--shadow-sm); }
+  .paste-target{ font-size:12.5px; font-weight:700; padding:9px 14px; border-radius:12px; display:inline-block; margin-bottom:12px; }
+  .paste-target.a{ background:var(--blue-soft); color:var(--blue-ink); }
+  .paste-target.b{ background:var(--blockb-soft); color:var(--blockb-accent); }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:12px 16px; }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  .field label{ font-size:12px; font-weight:700; color:var(--text-dim); }
+  .field .hint{ font-size:10.5px; color:var(--text-faint); }
+  input[type=text], input[type=password], input[type=date], input[type=number], textarea{
+    width:100%; background:var(--surface-2); border:1px solid var(--border); border-radius:12px;
+    padding:10px 12px; font-size:13px; color:var(--text); font-family:inherit;
+  }
+  input:focus, textarea:focus{ outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft); }
+  textarea{ resize:vertical; font-family:var(--mono); font-size:12.5px; line-height:1.6; }
+
+  .row-actions{ display:flex; align-items:center; gap:10px; margin-top:18px; flex-wrap:wrap; }
+  button.primary{
+    appearance:none; border:none; cursor:pointer; background:var(--gradient-blue); color:#fff;
+    font-family:inherit; font-weight:700; font-size:13px; padding:12px 26px; border-radius:999px;
+    box-shadow:0 8px 20px -10px rgba(37,68,201,0.4); transition:transform 0.1s, box-shadow 0.1s;
+  }
+  button.primary:hover:not(:disabled){ box-shadow:0 10px 24px -10px rgba(37,68,201,0.45); transform:translateY(-1px); }
+  button.primary:disabled{ opacity:0.4; cursor:default; }
+  #panel-tracking button.primary{ background:var(--gradient-violet); box-shadow:0 8px 20px -10px rgba(122,47,212,0.4); }
+  #panel-tracking button.primary:hover:not(:disabled){ box-shadow:0 10px 24px -10px rgba(122,47,212,0.45); }
+  button.ghost{
+    appearance:none; border:1px solid var(--border); cursor:pointer; background:var(--surface); color:var(--text-dim);
+    font-family:inherit; font-weight:700; font-size:12px; padding:9px 16px; border-radius:999px;
+    transition:background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  button.ghost:hover{ border-color:var(--blue); color:var(--blue-ink); background:var(--blue-soft); }
+  .status-msg{ font-size:12px; color:var(--danger); white-space:pre-wrap; }
+
+  .badge{ display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:800; padding:4px 10px 4px 8px; border-radius:20px; }
+  .badge::before{ content:''; width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
+  .badge.warn{ background:var(--warn-soft); color:var(--warn); }
+  .badge.danger{ background:var(--danger-soft); color:var(--danger); }
+  .badge.ok{ background:var(--ok-soft); color:var(--ok); }
+  .badge.dim{ background:var(--surface-2); color:var(--text-faint); }
+
+  table{ border-collapse:collapse; width:100%; font-size:12.5px; }
+  th, td{ border-bottom:1px solid var(--border); padding:9px 10px; text-align:left; white-space:nowrap; }
+  th{ background:var(--surface-2); font-weight:800; color:var(--text-dim); position:sticky; top:0; }
+  tbody tr:hover td{ background:var(--surface-2); }
+  .tbl-wrap{ overflow-x:auto; border:1px solid var(--border); border-radius:14px; margin-top:8px; }
+  .tbl-wrap table{ margin:0; }
+  td input{ border:none; background:transparent; width:100%; min-width:70px; padding:3px 4px; font-size:12.5px; font-family:inherit; color:var(--text); border-radius:6px; }
+  td input:focus{ outline:none; box-shadow:0 0 0 2px var(--blue-soft); background:var(--surface); }
+  tr.flag-review td{ background:var(--warn-soft); }
+  tr.flag-dup td{ background:var(--danger-soft); }
+  tr.flag-review:hover td, tr.flag-dup:hover td{ background:var(--warn-soft); }
+  tr.flag-dup:hover td{ background:var(--danger-soft); }
+  tr.flag-review td:first-child{ box-shadow:inset 3px 0 0 var(--warn); }
+  tr.flag-dup td:first-child{ box-shadow:inset 3px 0 0 var(--danger); }
+
+  .group{ margin-top:20px; }
+  .group h3{ margin:0 0 8px; font-size:13px; display:flex; align-items:center; gap:8px; }
+  pre{ background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:14px 16px; font-size:12px; line-height:1.75; white-space:pre-wrap; font-family:var(--mono); margin:0; }
+
+  .excluded-list{ font-size:11.5px; color:var(--text-faint); margin-top:6px; list-style:none; padding:0; }
+  .excluded-list li{ padding:5px 0; border-bottom:1px solid var(--border); }
+  .excluded-list li:last-child{ border-bottom:none; }
+
+  .note-banner{ font-size:11.5px; color:var(--text-dim); background:var(--surface-2); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:18px; line-height:1.7; }
+  .note-banner b{ color:var(--text); }
+
+  details.legend{ margin-top:12px; }
+  details.legend summary{ cursor:pointer; font-size:12px; color:var(--text-faint); font-weight:700; }
+  details.legend .legend-body{ margin-top:10px; font-size:11.5px; color:var(--text-dim); }
+  details.legend ul{ margin:4px 0 10px 18px; padding:0; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <h1>업무일지 도구</h1>
+    <div class="sub">시트 주소·API 키는 이 브라우저에만 저장 · 구글 서버로 직접 호출 (중간 서버 없음)</div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="sisun">시선 업무일지 정리</button>
+    <button class="tab-btn" data-tab="tracking">트래킹 시트</button>
+  </nav>
+
+  <!-- ============== TAB 1: 시선 ============== -->
+  <section id="panel-sisun" class="panel active">
+    <div class="card">
+      <h2>진행중 항목 정리</h2>
+      <div class="desc">진행상황이 "완료"가 아닌 항목을 상태별로 묶어 업무일지용 로그 줄을 만듭니다. 누를 때마다 시트를 새로 불러옵니다.</div>
+      <div class="grid">
+        <div class="field">
+          <label>구글 시트 주소</label>
+          <input id="s_sheetId" type="text" placeholder="시트 링크 붙여넣기" />
+        </div>
+        <div class="field">
+          <label>시트 탭 이름</label>
+          <input id="s_tabName" type="text" placeholder="9월" />
+        </div>
+        <div class="field">
+          <label>API 키</label>
+          <input id="s_apiKey" type="password" placeholder="AIza..." />
+        </div>
+      </div>
+      <div class="row-actions">
+        <button class="primary" id="s_runBtn">정리하기</button>
+        <div class="status-msg" id="s_log"></div>
+      </div>
+    </div>
+    <div id="s_result"></div>
+  </section>
+
+  <!-- ============== TAB 2: 트래킹 ============== -->
+  <section id="panel-tracking" class="panel">
+    <div class="note-banner">
+      사용자가 붙여넣어준 원본 스펙 문서가 인코딩 손상(모지바케)으로 일부 깨져 있어, <b>디자인 2팀 트래킹 시트</b> 메모리에 저장된 검증된 컬럼 구조를 기준으로 복원해 만들었습니다.
+      "싱글/캐러셀/영상" 수량 칸이 시트에 두 번씩 있는 등 원래 스펙에서도 애매하다고 표시된 부분은 <span class="badge warn">확인 필요</span> 표시만 해두고 자동으로 확정하지 않았습니다 — 표를 직접 눌러 값을 고친 뒤 복사해주세요.
+    </div>
+
+    <div class="card">
+      <h2>업무 로그 입력 (여러 날짜 한번에 가능)</h2>
+      <div class="desc">날짜 줄(예: <code>9/8</code>, <code>9/8(월)</code>, <code>2026-09-08</code>)을 적고 그 아래에 그날 항목을 줄줄이 붙여넣으면, 날짜별로 자동으로 나눠서 처리합니다. 한 주치를 한 번에 붙여넣어도 됩니다.</div>
+      <div class="grid">
+        <div class="field">
+          <label>기본 날짜</label>
+          <input id="t_date" type="date" />
+          <div class="hint">날짜 줄이 없는 항목에만 적용됨</div>
+        </div>
+        <div class="field">
+          <label>담당자 이름</label>
+          <input id="t_owner" type="text" placeholder="예: 노진선" />
+          <div class="hint">해당 이름이 괄호로 붙어있고 다른 사람이면 자동 제외</div>
+        </div>
+      </div>
+      <div class="field" style="margin-top:12px;">
+        <label>업무 텍스트</label>
+        <textarea id="t_rawText" rows="14" placeholder="9/8
+- 지인페스타_키비주얼 신규 3종, 베리 5종 제작
+- 팀회의
+
+9/9(화)
+- LG전자 냉장고_9월 템플릿 활용 베리 4종
+- 시선 ITzcoupon 비즈보드 세트 6종 제작
+
+9/10
+- 설화수 신규 컷 2종 제작"></textarea>
+      </div>
+      <details class="legend">
+        <summary>제외/판정 기준 보기</summary>
+        <div class="legend-body">
+          다음 키워드가 포함된 줄은 결과물이 아닌 내부 업무로 보고 자동 제외합니다:
+          <ul><li>회의, 미팅, 면담, VC, 스터디, 테스트, 레벨업, 교육, 인수인계, 계정확인, 사이즈확인, 우선순위, 확인, 조율, 기타, 기획전달</li>
+          <li>"로고 제작"(신규 로고)도 제외 — 단, "로고 변경/베리"는 포함</li></ul>
+          작업레벨은 메모리에 저장된 기준(A=신규기획·신규제작, B=단순제작·템플릿활용, C=광고주 PSD 활용, D=썸네일·오브젝트 제작·언어베리, E=사이즈베리)을 따릅니다. 이 기준에 명확히 안 맞으면 레벨을 비워두고 <span class="badge warn">확인 필요</span>로 표시합니다.
+        </div>
+      </details>
+      <div class="row-actions">
+        <button class="primary" id="t_parseBtn">변환하기</button>
+        <div class="status-msg" id="t_log"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>중복 확인용 시트 연결 (선택)</h2>
+      <div class="desc">입력해두면 최근 행을 불러와 이미 있는 항목인지 대조합니다. 비워두면 이 단계 없이 바로 표만 만듭니다.</div>
+      <div class="grid">
+        <div class="field">
+          <label>구글 시트 주소</label>
+          <input id="t_sheetId" type="text" placeholder="시트 링크 붙여넣기" />
+        </div>
+        <div class="field">
+          <label>트래킹 시트 탭 이름</label>
+          <input id="t_tabName" type="text" placeholder="디자인 2팀" />
+        </div>
+        <div class="field">
+          <label>API 키</label>
+          <input id="t_apiKey" type="password" placeholder="AIza..." />
+        </div>
+        <div class="field">
+          <label>최근 조회 행 수</label>
+          <input id="t_lookback" type="number" value="300" />
+        </div>
+      </div>
+    </div>
+
+    <div id="t_result"></div>
+  </section>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+/* ---------- 탭 전환 ---------- */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    $('panel-' + btn.dataset.tab).classList.add('active');
+  };
+});
+
+function extractSheetId(input) {
+  const m = input.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : input;
+}
+
+/* =========================================================
+   TAB 1: 시선 업무일지 정리 (기존 기능 그대로)
+   ========================================================= */
+const S_STORAGE_KEY = 'sisun-worklog-settings';
+
+function s_loadSettings(){
+  const saved = JSON.parse(localStorage.getItem(S_STORAGE_KEY) || '{}');
+  if (saved.sheetId) $('s_sheetId').value = saved.sheetId;
+  if (saved.tabName) $('s_tabName').value = saved.tabName;
+  if (saved.apiKey) $('s_apiKey').value = saved.apiKey;
+}
+
+function findHeaderRow(values) {
+  for (let i = 0; i < values.length; i++) {
+    const row = values[i];
+    if (row.includes('브랜드') && row.includes('기획전명') && row.includes('진행상황')) return i;
+  }
+  return -1;
+}
+
+const DAY_NAMES = ['일','월','화','수','목','금','토'];
+function formatDateWithDay(mm, dd, year) {
+  const d = new Date(year, mm - 1, dd);
+  return `${mm}/${dd}(${DAY_NAMES[d.getDay()]})`;
+}
+
+function extractLiveDate(scheduleText, year) {
+  if (!scheduleText) return null;
+  const liveMatch = scheduleText.match(/(\d{1,2})\/(\d{1,2})\s*[:\s]*\s*라이브/);
+  const match = liveMatch || scheduleText.match(/(\d{1,2})\/(\d{1,2})/);
+  if (!match) return null;
+  return formatDateWithDay(parseInt(match[1], 10), parseInt(match[2], 10), year);
+}
+
+function buildLogLine(row) {
+  const brand = row.brand.trim();
+  const campaign = row.campaign.trim();
+  const materialType = row.materialType || '';
+  const image = parseInt(row.image, 10) || 0;
+  const veri = parseInt(row.veri, 10) || 0;
+  const video = parseInt(row.video, 10) || 0;
+
+  let label = `${brand}-${campaign}`;
+  let parts = [];
+
+  if (video > 0) parts.push(`영상 ${video}종`);
+
+  if (materialType.includes('비즈보드') && materialType.includes('스마트채널')) {
+    parts.push(`비즈보드 set ${veri || image}종`);
+  } else if (image > 0) {
+    parts.push(`신규 ${image}종, 베리 ${veri}종`);
+  } else if (veri > 0) {
+    parts.push(`베리 ${veri}종`);
+  } else {
+    parts.push(`베리 0종`);
+  }
+
+  return `- 시선 [${label}] ${parts.join(', ')} 제작/전달`;
+}
+
+/* 완료 여부와 무관하게 전체 행을 주차별로 집계 (신규/베리/비즈보드세트/영상 종수) */
+function s_aggregate(values, headerIdx, col) {
+  const byWeek = {};
+  const monthTotal = { new: 0, veri: 0, biz: 0, video: 0, total: 0 };
+
+  for (let i = headerIdx + 1; i < values.length; i++) {
+    const r = values[i];
+    if (!r || !r[col.brand] || !r[col.campaign]) continue;
+
+    const week = (r[col.week] || '').trim() || '주차 미상';
+    const materialType = r[col.materialType] || '';
+    const image = parseInt(r[col.image], 10) || 0;
+    const veri = parseInt(r[col.veri], 10) || 0;
+    const video = parseInt(r[col.video], 10) || 0;
+
+    if (!byWeek[week]) byWeek[week] = { new: 0, veri: 0, biz: 0, video: 0, total: 0 };
+    const bucket = byWeek[week];
+
+    if (materialType.includes('비즈보드') && materialType.includes('스마트채널')) {
+      const n = veri || image;
+      bucket.biz += n; bucket.total += n;
+      monthTotal.biz += n; monthTotal.total += n;
+    } else {
+      bucket.new += image; bucket.veri += veri; bucket.total += image + veri;
+      monthTotal.new += image; monthTotal.veri += veri; monthTotal.total += image + veri;
+    }
+    bucket.video += video; bucket.total += video;
+    monthTotal.video += video; monthTotal.total += video;
+  }
+
+  return { byWeek, monthTotal };
+}
+
+async function s_run() {
+  $('s_log').textContent = '';
+  $('s_result').innerHTML = '';
+  $('s_runBtn').disabled = true;
+
+  try {
+    const sheetId = extractSheetId($('s_sheetId').value.trim());
+    const tabName = $('s_tabName').value.trim();
+    const apiKey = $('s_apiKey').value.trim();
+    if (!sheetId || !tabName || !apiKey) {
+      $('s_log').textContent = '시트 주소, 탭 이름, API 키를 모두 입력해주세요.';
+      return;
+    }
+    localStorage.setItem(S_STORAGE_KEY, JSON.stringify({ sheetId: $('s_sheetId').value.trim(), tabName, apiKey }));
+
+    const range = encodeURIComponent(`${tabName}!A1:Q300`);
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`시트 API 호출 실패 (${res.status}): ${text.slice(0, 300)}`);
+    }
+    const json = await res.json();
+    const values = json.values || [];
+    const headerIdx = findHeaderRow(values);
+    if (headerIdx === -1) throw new Error('헤더 행을 못 찾았습니다. 탭 이름을 확인해주세요.');
+    const header = values[headerIdx];
+    const colIndex = (name) => header.indexOf(name);
+    const col = {
+      status: colIndex('진행상황'),
+      week: colIndex('주차'),
+      schedule: colIndex('제작 일정'),
+      brand: colIndex('브랜드'),
+      campaign: colIndex('기획전명'),
+      materialType: colIndex('소재 유형'),
+      image: colIndex('이미지'),
+      veri: colIndex('베리'),
+      video: colIndex('영상'),
+    };
+
+    const year = new Date().getFullYear();
+    const groups = {};
+    const tableRows = [];
+
+    for (let i = headerIdx + 1; i < values.length; i++) {
+      const r = values[i];
+      if (!r || !r[col.brand] || !r[col.campaign]) continue;
+      const status = (r[col.status] || '').trim();
+      if (!status || status === '완료') continue;
+
+      const row = {
+        brand: r[col.brand] || '',
+        campaign: r[col.campaign] || '',
+        materialType: r[col.materialType] || '',
+        image: r[col.image] || '',
+        veri: r[col.veri] || '',
+        video: r[col.video] || '',
+      };
+      const dateStr = extractLiveDate(r[col.schedule] || '', year) || '(날짜 미상)';
+      const line = buildLogLine(row);
+
+      if (!groups[status]) groups[status] = [];
+      groups[status].push(line);
+      tableRows.push({ status, date: dateStr, label: `${row.brand}-${row.campaign}` });
+    }
+
+    const aggregate = s_aggregate(values, headerIdx, col);
+
+    s_renderResult(tableRows, groups, aggregate, tabName);
+  } catch (e) {
+    $('s_log').textContent = '오류: ' + e.message;
+  }
+  $('s_runBtn').disabled = false;
+}
+
+function s_aggRowText(label, b) {
+  return `${label} 신규 ${b.new}종, 베리 ${b.veri}종${b.biz ? `, 비즈보드 ${b.biz}종` : ''}${b.video ? `, 영상 ${b.video}종` : ''} (총 ${b.total}종)`;
+}
+
+function s_sectionDivider(num, title, modifier) {
+  const cls = modifier || '';
+  return `<div class="section-divider"><span class="num ${cls}">${num}</span><span class="title ${cls}">${title}</span><span class="line"></span></div>`;
+}
+
+function s_renderAggregate(aggregate, tabName) {
+  const weeks = Object.keys(aggregate.byWeek);
+  const m = aggregate.monthTotal;
+  const lines = weeks.map(week => s_aggRowText(week, aggregate.byWeek[week]));
+  lines.push(s_aggRowText(`${tabName} 합계`, m));
+  const text = lines.join('\n');
+
+  let html = '<div class="card stats"><div class="eyebrow">주차 / 월 단위 합계</div><h2>제작 종수 집계 (' + tabName + ')</h2>';
+  html += '<div class="desc">완료 여부와 상관없이 이번 탭의 전체 행을 주차별로 합산합니다.</div>';
+  html += '<div class="tbl-wrap"><table><thead><tr><th>주차</th><th>신규</th><th>베리</th><th>비즈보드 세트</th><th>영상</th><th>합계</th></tr></thead><tbody>';
+  weeks.forEach(week => {
+    const b = aggregate.byWeek[week];
+    html += `<tr><td>${week}</td><td>${b.new}</td><td>${b.veri}</td><td>${b.biz}</td><td>${b.video}</td><td><b>${b.total}</b></td></tr>`;
+  });
+  html += `<tr style="font-weight:700; background:var(--surface-2);"><td>${tabName} 합계</td><td>${m.new}</td><td>${m.veri}</td><td>${m.biz}</td><td>${m.video}</td><td>${m.total}</td></tr>`;
+  html += '</tbody></table></div>';
+
+  html += '<div style="margin-top:14px;"><div class="eyebrow">복사용 텍스트 미리보기</div>';
+  html += `<pre>${text}</pre>`;
+  html += `<div class="row-actions"><button class="ghost copy" data-text="${encodeURIComponent(text)}">요약 텍스트 복사</button></div>`;
+  html += '</div></div>';
+  return html;
+}
+
+function s_renderResult(tableRows, groups, aggregate, tabName) {
+  let html = '';
+
+  html += s_sectionDivider(1, '진행중 항목 한눈에 보기');
+  html += '<div class="card"><div class="eyebrow">원본 확인용 표</div><h2>완료 아닌 항목 목록</h2>';
+  if (tableRows.length === 0) {
+    html += '<p style="color:var(--text-faint); font-size:12.5px;">완료 아닌 항목이 없습니다 — 전부 완료 상태입니다.</p></div>';
+  } else {
+    html += '<div class="tbl-wrap"><table><tr><th>상태</th><th>날짜</th><th>브랜드-기획전명</th></tr>';
+    tableRows.forEach(r => {
+      html += `<tr><td>${r.status}</td><td>${r.date}</td><td>${r.label}</td></tr>`;
+    });
+    html += '</table></div></div>';
+
+    html += s_sectionDivider(2, '상태별 복사용 로그');
+    Object.keys(groups).forEach(status => {
+      const text = groups[status].join('\n');
+      html += `<div class="card group"><div class="eyebrow">복사해서 업무일지에 붙여넣기</div>`;
+      html += `<h2>${status}</h2>`;
+      html += `<pre>${text}</pre>`;
+      html += `<div class="row-actions"><button class="ghost copy" data-text="${encodeURIComponent(text)}">복사</button></div>`;
+      html += '</div>';
+    });
+  }
+
+  html += s_sectionDivider(3, '제작 종수 집계 (주차 / 월별)', 'stats');
+  html += s_renderAggregate(aggregate, tabName);
+
+  $('s_result').innerHTML = html;
+  bindCopyButtons($('s_result'));
+}
+
+function bindCopyButtons(scope){
+  scope.querySelectorAll('button.copy').forEach(btn => {
+    btn.onclick = () => {
+      const text = decodeURIComponent(btn.getAttribute('data-text'));
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '복사됨!';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      });
+    };
+  });
+}
+
+$('s_runBtn').onclick = s_run;
+
+/* =========================================================
+   TAB 2: 일일 로그 → 트래킹 시트 (디자인 2팀)
+   ========================================================= */
+const T_STORAGE_KEY = 'tracking-worklog-settings';
+
+const T_COLUMNS = ['브랜드명','업무 요청내용','담당팀','담당자','작업종류','작업레벨','작업개요',
+  '싱글 기획','신규 이미지','캐러셀','템플릿 활용','썸네일 제작','이미지 베리','단컷 모션','영상 편집',
+  'C2C','베리','비즈보드','싱글','캐러셀','영상','카피 only'];
+
+const KNOWN_BRANDS = ['랄프로렌','설화수','LX하우시스US','LX하우시스','LG U+','LG전자','티젠','코오롱스포츠',
+  '아모레스토어','네이버웹툰','키움투자자산운용','헤이딜러','오뚜기 국내','오뚜기 글로벌','드래곤네스트',
+  '트래블월렛','Nest Ads','유엔난민기구','다우오피스','롯데온','시선인터내셔널','사람인'];
+
+const EXCLUDE_KEYWORDS = ['회의','미팅','면담','VC','스터디','테스트','레벨업','교육','인수인계',
+  '계정확인','사이즈확인','우선순위','확인','조율','기타','기획전달'];
+
+function t_loadSettings(){
+  const saved = JSON.parse(localStorage.getItem(T_STORAGE_KEY) || '{}');
+  if (saved.owner) $('t_owner').value = saved.owner;
+  if (saved.sheetId) $('t_sheetId').value = saved.sheetId;
+  if (saved.tabName) $('t_tabName').value = saved.tabName;
+  if (saved.apiKey) $('t_apiKey').value = saved.apiKey;
+  if (saved.lookback) $('t_lookback').value = saved.lookback;
+  $('t_date').value = new Date().toISOString().slice(0,10);
+}
+
+function t_saveSettings(){
+  localStorage.setItem(T_STORAGE_KEY, JSON.stringify({
+    owner: $('t_owner').value.trim(),
+    sheetId: $('t_sheetId').value.trim(),
+    tabName: $('t_tabName').value.trim(),
+    apiKey: $('t_apiKey').value.trim(),
+    lookback: $('t_lookback').value.trim(),
+  }));
+}
+
+function shiftPastWeekend(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDay();
+  if (day === 6) d.setDate(d.getDate() + 2);
+  else if (day === 0) d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0,10);
+}
+
+function detectBrand(text){
+  if (/시선/.test(text)) return '시선인터내셔널';
+  if (/LG\s*전자|엘지전자/.test(text)) return 'LG전자';
+  for (const b of KNOWN_BRANDS) { if (text.includes(b)) return b; }
+  return '';
+}
+
+function extractProjectKey(text){
+  const bracket = text.match(/\[([^\]]+)\]/);
+  if (bracket) return bracket[1].trim();
+  const cleaned = text.replace(/^[-•*]\s*/, '');
+  const words = cleaned.split(/\s+/);
+  return words.slice(0, Math.min(3, words.length)).join(' ');
+}
+
+function extractQuantities(text){
+  const re = /(신규|베리|템플릿|썸네일|비즈보드|스마트채널|언어\s*베리|단컷|캐러셀|싱글|브랜드검색|영상)\s*(\d+)\s*종/g;
+  const found = [];
+  let m;
+  while ((m = re.exec(text)) !== null) found.push({ type: m[1].replace(/\s+/g,''), n: parseInt(m[2], 10) });
+  return found;
+}
+
+function isExcluded(text){
+  if (/로고\s*제작/.test(text) && !/베리|변경/.test(text)) return '로고 신규제작(결과물 아님)';
+  for (const kw of EXCLUDE_KEYWORDS) {
+    if (text.includes(kw)) return `제외 키워드 "${kw}" 포함`;
+  }
+  if (!/제작|베리$|베리\s|종/.test(text)) return '제작/베리 결과물로 보이지 않음';
+  return null;
+}
+
+/* 작업레벨/컬럼 배정. 확신 없는 경우 needsReview=true 로 표시하고 값은 비워둠 */
+function classify(text, quantities){
+  const has = (t) => quantities.some(q => q.type === t);
+  const qty = (t) => (quantities.find(q => q.type === t) || {}).n || 0;
+  const result = { level:'', summary:'', cols:{}, needsReview:false, note:'' };
+
+  if (has('비즈보드') || (has('스마트채널') && /비즈보드/.test(text))) {
+    result.level = 'D';
+    result.summary = '비즈보드/스마트채널 세트 제작';
+    result.cols['비즈보드'] = qty('비즈보드') || qty('스마트채널');
+    result.needsReview = true;
+    result.note = '비즈보드·스마트채널 수량을 하나의 컬럼에 넣었습니다. 시트에 썸네일/이미지베리로 나눠 적는 관행이면 직접 나눠주세요.';
+    return result;
+  }
+  if (/브랜드검색/.test(text) && has('영상')) {
+    result.level = 'E';
+    result.summary = '브랜드검색 영상 베리에이션';
+    result.cols['영상(2)'] = qty('영상');
+    return result;
+  }
+  if (has('템플릿')) {
+    result.level = 'B';
+    result.summary = '템플릿 활용 제작';
+    result.cols['템플릿 활용'] = qty('템플릿') || qty('베리') || 1;
+    return result;
+  }
+  if (has('썸네일')) {
+    result.level = 'D';
+    result.summary = '썸네일 제작';
+    result.cols['썸네일 제작'] = qty('썸네일');
+    return result;
+  }
+  if (has('언어베리') || /언어\s*베리/.test(text)) {
+    result.level = 'D';
+    result.summary = '언어 베리에이션';
+    result.cols['이미지 베리'] = qty('언어베리');
+    return result;
+  }
+  if (has('단컷')) {
+    result.level = has('베리') ? 'E' : 'A';
+    result.summary = '단컷 모션 ' + (has('베리') ? '베리에이션' : '신규 제작');
+    result.cols['단컷 모션'] = qty('단컷');
+    return result;
+  }
+  if (has('영상')) {
+    const isNew = /신규/.test(text) && !/베리/.test(text);
+    result.level = isNew ? 'A' : 'E';
+    result.summary = isNew ? '영상 신규 제작' : '영상 베리에이션';
+    result.cols[isNew ? '영상 편집' : '영상(2)'] = qty('영상');
+    return result;
+  }
+  if (has('신규') && has('베리')) {
+    result.level = 'A';
+    result.summary = '신규 + 베리 제작';
+    if (has('캐러셀')) { result.cols['캐러셀'] = qty('신규'); result.cols['캐러셀(2)'] = qty('베리'); }
+    else { result.cols['신규 이미지'] = qty('신규'); result.cols['베리'] = qty('베리'); }
+    return result;
+  }
+  if (has('신규')) {
+    result.level = 'A';
+    result.summary = '신규 제작';
+    if (has('캐러셀')) result.cols['캐러셀'] = qty('신규');
+    else if (has('싱글')) result.cols['싱글 기획'] = qty('신규');
+    else result.cols['신규 이미지'] = qty('신규');
+    return result;
+  }
+  if (has('베리')) {
+    result.level = 'E';
+    result.summary = '사이즈 베리에이션';
+    if (has('캐러셀')) result.cols['캐러셀(2)'] = qty('베리');
+    else if (has('싱글')) result.cols['싱글(2)'] = qty('베리');
+    else result.cols['베리'] = qty('베리');
+    return result;
+  }
+
+  result.needsReview = true;
+  result.note = '키워드로 작업레벨을 판단하지 못했습니다. 직접 레벨/수량을 입력해주세요.';
+  return result;
+}
+
+async function t_fetchRecentRows(){
+  const sheetId = extractSheetId($('t_sheetId').value.trim());
+  const tabName = $('t_tabName').value.trim();
+  const apiKey = $('t_apiKey').value.trim();
+  if (!sheetId || !tabName || !apiKey) return null;
+  const lookback = parseInt($('t_lookback').value, 10) || 300;
+  const range = encodeURIComponent(`${tabName}!F1:G${lookback}`);
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`트래킹 시트 조회 실패 (${res.status})`);
+  const json = await res.json();
+  return (json.values || []).map(r => (r[1] || '')).filter(Boolean);
+}
+
+let T_ROWS = [];
+
+/* 날짜 줄(9/8, 9/8(월), 2026-09-08)을 헤더로 보고 그 아래 줄들을 해당 날짜로 묶음 */
+function parseMultiDayText(text, defaultDate){
+  const dateLineRe = /^(\d{4})-(\d{1,2})-(\d{1,2})$|^(\d{1,2})\/(\d{1,2})(?:\s*\([^)]+\))?\s*:?\s*$/;
+  const lines = text.split('\n');
+  const days = [];
+  let current = null;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    const m = line.match(dateLineRe);
+    if (m) {
+      let iso;
+      if (m[1]) iso = `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+      else {
+        const year = new Date().getFullYear();
+        iso = `${year}-${String(m[4]).padStart(2,'0')}-${String(m[5]).padStart(2,'0')}`;
+      }
+      current = { date: iso, lines: [] };
+      days.push(current);
+      continue;
+    }
+    if (!current) { current = { date: defaultDate, lines: [] }; days.push(current); }
+    current.lines.push(line);
+  }
+  return days;
+}
+
+async function t_parse(){
+  $('t_log').textContent = '';
+  $('t_result').innerHTML = '';
+  $('t_parseBtn').disabled = true;
+  t_saveSettings();
+
+  try {
+    const owner = $('t_owner').value.trim();
+    const defaultDate = $('t_date').value || new Date().toISOString().slice(0,10);
+    const rawText = $('t_rawText').value;
+    const days = parseMultiDayText(rawText, defaultDate);
+
+    let existingTitles = [];
+    try {
+      const fetched = await t_fetchRecentRows();
+      if (fetched) existingTitles = fetched;
+    } catch (e) {
+      $('t_log').textContent = '(중복 확인 건너뜀) ' + e.message;
+    }
+
+    const rows = [];
+    const excluded = [];
+
+    for (const day of days) {
+      const reqDate = day.date;
+      const doneDate = shiftPastWeekend(reqDate);
+
+      for (const line of day.lines) {
+        const ownerTag = line.match(/\(([^)]+)\)\s*$/);
+        if (ownerTag && owner && ownerTag[1].trim() !== owner) {
+          excluded.push({ line, reason: `담당자 "${ownerTag[1].trim()}" (본인 아님)`, date: reqDate });
+          continue;
+        }
+        const exReason = isExcluded(line);
+        if (exReason) { excluded.push({ line, reason: exReason, date: reqDate }); continue; }
+
+        const quantities = extractQuantities(line);
+        const projectKey = extractProjectKey(line);
+        const brand = detectBrand(line) || detectBrand(projectKey);
+        const cls = classify(line, quantities);
+        const isVeri = /베리/.test(line) && !/신규/.test(line);
+        const title = `<${projectKey}> ${isVeri ? '베리' : '제작'}`;
+
+        const dup = existingTitles.find(t => t.includes(projectKey));
+
+        const colVals = {};
+        T_COLUMNS.forEach(c => colVals[c] = '');
+        colVals['브랜드명'] = brand;
+        colVals['업무 요청내용'] = title;
+        colVals['담당자'] = owner;
+        colVals['작업레벨'] = cls.level ? `레벨 ${cls.level}` : '';
+        colVals['작업개요'] = cls.summary;
+        Object.entries(cls.cols).forEach(([k, v]) => {
+          const mapped = k.replace('(2)','');
+          colVals[mapped] = v;
+        });
+
+        rows.push({
+          raw: line,
+          reqDate, doneDate,
+          cols: colVals,
+          needsReview: cls.needsReview || !brand,
+          note: cls.note || (!brand ? '브랜드를 자동으로 못 찾았습니다.' : ''),
+          isDup: !!dup,
+          dupNote: dup ? `기존 항목과 이름이 비슷합니다: "${dup.slice(0,40)}..."` : '',
+        });
+      }
+    }
+
+    T_ROWS = rows;
+    t_renderResult(rows, excluded);
+  } catch (e) {
+    $('t_log').textContent = '오류: ' + e.message;
+  }
+  $('t_parseBtn').disabled = false;
+}
+
+function t_renderResult(rows, excluded){
+  let html = '';
+
+  if (rows.length === 0) {
+    html += '<div class="card"><p style="color:var(--text-faint); font-size:12.5px;">기록할 항목이 없습니다.</p></div>';
+  } else {
+    html += '<div class="card blocka">';
+    html += '<h2><span class="step-badge a">1</span>A 블록 · 브랜드명 ~ 카피 only (22열)</h2>';
+    html += '<div class="paste-target a">시트에서 <b>"브랜드명"</b> 셀을 클릭한 뒤 여기서 복사한 걸 붙여넣으세요</div>';
+    html += '<div class="desc"><span class="badge warn">확인 필요</span> 또는 <span class="badge danger">중복 의심</span> 표시가 붙은 행은 값을 직접 수정한 뒤 복사해주세요.</div>';
+    html += '<div class="tbl-wrap"><table><thead><tr><th>#</th><th>날짜</th>' + T_COLUMNS.map(c => `<th>${c}</th>`).join('') + '<th>메모</th></tr></thead><tbody>';
+    rows.forEach((r, i) => {
+      const cls = r.isDup ? 'flag-dup' : (r.needsReview ? 'flag-review' : '');
+      html += `<tr class="${cls}" data-idx="${i}"><td>${i+1}</td><td>${r.reqDate}</td>`;
+      T_COLUMNS.forEach(c => {
+        html += `<td><input data-col="${c}" value="${(r.cols[c] ?? '').toString().replace(/"/g,'&quot;')}" /></td>`;
+      });
+      const badge = r.isDup ? `<span class="badge danger">중복 의심</span> ${r.dupNote}` : (r.needsReview ? `<span class="badge warn">확인 필요</span> ${r.note}` : '');
+      html += `<td>${badge}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+    html += '<div class="row-actions"><button class="ghost copy-blockA" id="t_copyA">① A 블록 복사 (22열)</button></div>';
+    html += '</div>';
+
+    html += '<div class="card blockb">';
+    html += '<h2><span class="step-badge b">2</span>B 블록 · 요청일 / 완료일 (2열)</h2>';
+    html += '<div class="paste-target b">A 블록을 먼저 붙여넣은 뒤, 시트에서 <b>"요청일"</b> 셀을 클릭하고 이걸 붙여넣으세요 — 사이의 "처리상태" 칸은 절대 건드리지 마세요</div>';
+    html += '<div class="desc">완료일은 요청일이 주말이면 다음 평일로 자동 이동했습니다. 필요하면 직접 수정하세요.</div>';
+    html += '<div class="tbl-wrap"><table><thead><tr><th>#</th><th>요청일</th><th>완료일</th></tr></thead><tbody>';
+    rows.forEach((r, i) => {
+      html += `<tr data-idx="${i}"><td>${i+1}</td>
+        <td><input data-bcol="reqDate" value="${r.reqDate}" /></td>
+        <td><input data-bcol="doneDate" value="${r.doneDate}" /></td></tr>`;
+    });
+    html += '</tbody></table></div>';
+    html += '<div class="row-actions"><button class="ghost copy-blockB" id="t_copyB">② B 블록 복사 (2열)</button></div>';
+    html += '</div>';
+  }
+
+  if (excluded.length > 0) {
+    html += '<div class="card"><h2>제외된 항목 <span class="badge dim">' + excluded.length + '</span></h2><ul class="excluded-list">';
+    excluded.forEach(e => { html += `<li>[${e.date}] "${e.line}" — ${e.reason}</li>`; });
+    html += '</ul></div>';
+  }
+
+  $('t_result').innerHTML = html;
+
+  const aBtn = $('t_copyA');
+  if (aBtn) aBtn.onclick = () => {
+    const table = document.querySelector('#t_result table');
+    const tsv = T_ROWS.map((_, i) => {
+      const tr = document.querySelector(`tr[data-idx="${i}"]`);
+      return T_COLUMNS.map(c => tr.querySelector(`input[data-col="${c}"]`).value).join('\t');
+    }).join('\n');
+    navigator.clipboard.writeText(tsv).then(() => { aBtn.textContent = '복사됨!'; setTimeout(() => aBtn.textContent = 'Block A 복사', 1500); });
+  };
+  const bBtn = $('t_copyB');
+  if (bBtn) bBtn.onclick = () => {
+    const rows2 = document.querySelectorAll('#t_result table')[1].querySelectorAll('tbody tr');
+    const tsv = Array.from(rows2).map(tr => {
+      const req = tr.querySelector('input[data-bcol="reqDate"]').value;
+      const done = tr.querySelector('input[data-bcol="doneDate"]').value;
+      return `${req}\t${done}`;
+    }).join('\n');
+    navigator.clipboard.writeText(tsv).then(() => { bBtn.textContent = '복사됨!'; setTimeout(() => bBtn.textContent = 'Block B 복사', 1500); });
+  };
+}
+
+$('t_parseBtn').onclick = t_parse;
+
+window.onload = () => { s_loadSettings(); t_loadSettings(); };
+</script>
+</body>
+</html>
