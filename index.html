@@ -231,6 +231,8 @@
   .badge.s-amber{ background:var(--warn-soft); color:var(--warn); }
   .badge.s-rose{ background:var(--danger-soft); color:var(--danger); }
   .badge.new{ background:var(--ok-soft); color:var(--ok); margin-left:6px; }
+  .badge.lg{ font-size:20px; padding:8px 18px 8px 14px; }
+  .badge.lg::before{ width:9px; height:9px; }
 
   table{ border-collapse:collapse; width:100%; font-size:14px; }
   th, td{ border-bottom:1px solid var(--border); padding:9px 10px; text-align:left; white-space:nowrap; }
@@ -647,9 +649,10 @@ function s_renderAggregate(aggregate, tabName) {
   return html;
 }
 
-function s_statusBadge(status){
+function s_statusBadge(status, big){
   const cls = s_statusClass(status);
-  return `<span class="badge ${cls}">${status}</span>`;
+  const sizeCls = big ? ' lg' : '';
+  return `<span class="badge ${cls}${sizeCls}">${status}</span>`;
 }
 
 function s_renderResult(tableRows, groups, aggregate, tabName, hasBaseline) {
@@ -688,8 +691,8 @@ function s_renderResult(tableRows, groups, aggregate, tabName, hasBaseline) {
     Object.keys(groups).forEach(status => {
       const text = groups[status].join('\n');
       const accent = S_STATUS_ACCENT[s_statusClass(status)];
-      html += `<div class="card group" style="--group-accent:${accent}"><div class="eyebrow">복사해서 업무일지에 붙여넣기</div>`;
-      html += `<h2>${s_statusBadge(status)}</h2>`;
+      html += `<div class="card group" style="--group-accent:${accent}">`;
+      html += `<h2 style="margin-bottom:14px;">${s_statusBadge(status, true)}</h2>`;
       html += `<pre>${text}</pre>`;
       html += `<div class="row-actions"><button class="ghost copy" data-text="${encodeURIComponent(text)}">복사</button></div>`;
       html += '</div>';
