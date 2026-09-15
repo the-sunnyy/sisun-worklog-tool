@@ -289,7 +289,7 @@
   <section id="panel-sisun" class="panel active">
     <div class="card">
       <h2>진행중 항목 정리</h2>
-      <div class="desc">진행상황이 "완료"가 아닌 항목을 상태별로 묶어 업무일지용 로그 줄을 만듭니다. 누를 때마다 시트를 새로 불러옵니다.</div>
+      <div class="desc">진행상황이 있는 항목을 "완료" 포함 상태별로 묶어 업무일지용 로그 줄을 만듭니다. 누를 때마다 시트를 새로 불러옵니다.</div>
       <div class="grid">
         <div class="field">
           <label>구글 시트 주소</label>
@@ -582,7 +582,7 @@ async function s_run() {
       const r = values[i];
       if (!r || !r[col.brand] || !r[col.campaign]) continue;
       const status = (r[col.status] || '').trim();
-      if (!status || status === '완료') continue;
+      if (!status) continue;
 
       const row = {
         brand: r[col.brand] || '',
@@ -676,9 +676,9 @@ function s_renderResult(tableRows, groups, aggregate, tabName, hasBaseline) {
     }
   }
 
-  html += '<div class="card"><div class="eyebrow">원본 확인용 표</div><h2>완료 아닌 항목 목록</h2>';
+  html += '<div class="card"><div class="eyebrow">원본 확인용 표</div><h2>전체 항목 목록 (완료 포함)</h2>';
   if (tableRows.length === 0) {
-    html += '<p style="color:var(--text-faint); font-size:14px;">완료 아닌 항목이 없습니다 — 전부 완료 상태입니다.</p></div>';
+    html += '<p style="color:var(--text-faint); font-size:14px;">진행상황이 입력된 항목이 없습니다.</p></div>';
   } else {
     html += '<div class="tbl-wrap"><table><tr><th>상태</th><th>날짜</th><th>브랜드-기획전명</th></tr>';
     tableRows.forEach(r => {
