@@ -152,6 +152,8 @@
   .card::before{ content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--gradient-blue); }
   #panel-tracking .card:not(.stats):not(.blocka):not(.blockb)::before{ background:var(--gradient-violet); }
   .card h2{ font-size:17px; margin:0 0 4px; font-weight:800; letter-spacing:-0.01em; }
+  details.raw-table > summary{ cursor:pointer; font-size:17px; font-weight:800; letter-spacing:-0.01em; color:var(--text); }
+  details.raw-table[open] > summary{ margin-bottom:12px; }
   .card .desc{ font-size:14px; color:var(--text-faint); margin-bottom:16px; line-height:1.65; }
   .eyebrow{ display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:800; letter-spacing:0.02em; color:var(--blue); margin-bottom:8px; }
   .eyebrow::before{ content:''; width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
@@ -677,9 +679,11 @@ function s_renderResult(tableRows, groups, aggregate, tabName, hasBaseline) {
     }
   }
 
-  html += '<div class="card"><div class="eyebrow">원본 확인용 표</div><h2>전체 항목 목록 (완료 포함)</h2>';
+  html += '<div class="card"><div class="eyebrow">원본 확인용 표</div>';
+  html += '<details class="raw-table"><summary>전체 항목 목록 (완료 포함)</summary>';
   if (tableRows.length === 0) {
-    html += '<p style="color:var(--text-faint); font-size:14px;">진행상황이 입력된 항목이 없습니다.</p></div>';
+    html += '<p style="color:var(--text-faint); font-size:14px; margin-top:10px;">진행상황이 입력된 항목이 없습니다.</p>';
+    html += '</details></div>';
   } else {
     html += '<div class="tbl-wrap"><table><tr><th>상태</th><th>날짜</th><th>브랜드-기획전명</th></tr>';
     tableRows.forEach(r => {
@@ -687,7 +691,8 @@ function s_renderResult(tableRows, groups, aggregate, tabName, hasBaseline) {
       const newTag = r.isNew ? '<span class="badge new">NEW</span>' : '';
       html += `<tr${rowCls}><td>${s_statusBadge(r.status)}</td><td>${r.date}</td><td>${r.label}${newTag}</td></tr>`;
     });
-    html += '</table></div></div>';
+    html += '</table></div>';
+    html += '</details></div>';
 
     html += s_sectionDivider(2, '상태별 복사용 로그');
     Object.keys(groups).forEach(status => {
