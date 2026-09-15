@@ -688,13 +688,8 @@ function s_renderResult(tableRows, groups, aggregate, tabName, hasBaseline) {
     html += '<p style="color:var(--text-faint); font-size:14px;">진행상황이 입력된 항목이 없습니다.</p>';
     html += '</details></div>';
   } else {
-    html += '<div class="tbl-wrap"><table><tr><th>상태</th><th>날짜</th><th>브랜드-기획전명</th></tr>';
-    tableRows.forEach(r => {
-      const rowCls = r.isNew ? ' class="flag-new"' : '';
-      const newTag = r.isNew ? '<span class="badge new">NEW</span>' : '';
-      html += `<tr${rowCls}><td>${s_statusBadge(r.status)}</td><td>${r.date}</td><td>${r.label}${newTag}</td></tr>`;
-    });
-    html += '</table></div>';
+    const rawText = tableRows.map(r => `${r.status} · ${r.date} · ${r.label}${r.isNew ? ' [NEW]' : ''}`).join('\n');
+    html += `<pre>${rawText}</pre>`;
     html += '</details></div>';
 
     html += s_sectionDivider(2, '상태별 복사용 로그');
