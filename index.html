@@ -594,9 +594,10 @@ async function s_run() {
       };
       const dateStr = extractLiveDate(r[col.schedule] || '', year) || '(날짜 미상)';
       const line = buildLogLine(row);
+      const week = (r[col.week] || '').trim() || '주차 미상';
 
       if (!groups[status]) groups[status] = [];
-      groups[status].push(line);
+      groups[status].push({ line, week });
       tableRows.push({ status, date: dateStr, label: `${row.brand}-${row.campaign}`, id: s_itemId(row) });
     }
 
@@ -690,12 +691,29 @@ function s_renderResult(tableRows, groups, aggregate, tabName, hasBaseline) {
 
     html += s_sectionDivider(2, '상태별 복사용 로그');
     Object.keys(groups).forEach(status => {
-      const text = groups[status].join('\n');
+      const items = groups[status];
       const accent = S_STATUS_ACCENT[s_statusClass(status)];
       html += `<div class="card group" style="--group-accent:${accent}">`;
       html += `<h2 style="margin-bottom:14px;">${s_statusBadge(status, true)}</h2>`;
-      html += `<pre>${text}</pre>`;
-      html += `<div class="row-actions"><button class="ghost copy" data-text="${encodeURIComponent(text)}">복사</button></div>`;
+
+      if (status === '완료') {
+        const byWeek = {};
+        const weekOrder = [];
+        items.forEach(it => {
+          if (!byWeek[it.week]) { byWeek[it.week] = []; weekOrder.push(it.week); }
+          byWeek[it.week].push(it.line);
+        });
+        weekOrder.forEach(week => {
+          const text = byWeek[week].join('\n');
+          html += `<div class="group"><h3>${week}</h3>`;
+          html += `<pre>${text}</pre>`;
+          html += `<div class="row-actions"><button class="ghost copy" data-text="${encodeURIComponent(text)}">복사</button></div></div>`;
+        });
+      } else {
+        const text = items.map(it => it.line).join('\n');
+        html += `<pre>${text}</pre>`;
+        html += `<div class="row-actions"><button class="ghost copy" data-text="${encodeURIComponent(text)}">복사</button></div>`;
+      }
       html += '</div>';
     });
   }
