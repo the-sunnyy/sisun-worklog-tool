@@ -152,7 +152,11 @@
   .card::before{ content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--gradient-blue); }
   #panel-tracking .card:not(.stats):not(.blocka):not(.blockb)::before{ background:var(--gradient-violet); }
   .card h2{ font-size:17px; margin:0 0 4px; font-weight:800; letter-spacing:-0.01em; }
-  details.raw-table > summary{ cursor:pointer; font-size:17px; font-weight:800; letter-spacing:-0.01em; color:var(--text); }
+  .card.compact{ padding:14px 20px; }
+  details.raw-table > summary{ cursor:pointer; font-size:14px; font-weight:700; color:var(--text-dim); list-style:none; }
+  details.raw-table > summary::-webkit-details-marker{ display:none; }
+  details.raw-table > summary::before{ content:'▸'; display:inline-block; width:1em; font-size:11px; color:var(--text-faint); transition:transform 0.15s; }
+  details.raw-table[open] > summary::before{ transform:rotate(90deg); }
   details.raw-table[open] > summary{ margin-bottom:12px; }
   .card .desc{ font-size:14px; color:var(--text-faint); margin-bottom:16px; line-height:1.65; }
   .eyebrow{ display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:800; letter-spacing:0.02em; color:var(--blue); margin-bottom:8px; }
@@ -679,10 +683,9 @@ function s_renderResult(tableRows, groups, aggregate, tabName, hasBaseline) {
     }
   }
 
-  html += '<div class="card"><div class="eyebrow">원본 확인용 표</div>';
-  html += '<details class="raw-table"><summary>전체 항목 목록 (완료 포함)</summary>';
+  html += '<div class="card compact"><details class="raw-table"><summary>원본 확인용 표 · 전체 항목 목록 (완료 포함)</summary>';
   if (tableRows.length === 0) {
-    html += '<p style="color:var(--text-faint); font-size:14px; margin-top:10px;">진행상황이 입력된 항목이 없습니다.</p>';
+    html += '<p style="color:var(--text-faint); font-size:14px;">진행상황이 입력된 항목이 없습니다.</p>';
     html += '</details></div>';
   } else {
     html += '<div class="tbl-wrap"><table><tr><th>상태</th><th>날짜</th><th>브랜드-기획전명</th></tr>';
