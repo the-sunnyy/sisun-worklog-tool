@@ -917,9 +917,22 @@ function extractQuantities(text){
   const forward = new RegExp(`(${KEYWORDS})(?:포함)?\\s*(\\d+)\\s*종`, 'g');
   const backward = new RegExp(`(\\d+)\\s*종\\s*(${KEYWORDS})`, 'g');
   const found = [];
+  const claimed = [];
   let m;
-  while ((m = forward.exec(text)) !== null) found.push({ type: m[1].replace(/\s+/g,''), n: parseInt(m[2], 10) });
-  while ((m = backward.exec(text)) !== null) found.push({ type: m[2].replace(/\s+/g,''), n: parseInt(m[1], 10) });
+  while ((m = forward.exec(text)) !== null) {
+    found.push({ type: m[1].replace(/\s+/g,''), n: parseInt(m[2], 10) });
+    claimed.push([m.index, m.index + m[0].length]);
+  }
+  while ((m = backward.exec(text)) !== null) {
+    found.push({ type: m[2].replace(/\s+/g,''), n: parseInt(m[1], 10) });
+    claimed.push([m.index, m.index + m[0].length]);
+  }
+  /* 키워드와 숫자 사이에 다른 말이 끼어 특정 유형을 못 정한 "N종"은 베리로 취급 */
+  const generic = /(\d+)\s*종/g;
+  while ((m = generic.exec(text)) !== null) {
+    const overlaps = claimed.some(([s, e]) => m.index < e && m.index + m[0].length > s);
+    if (!overlaps) found.push({ type: '베리', n: parseInt(m[1], 10) });
+  }
   return found;
 }
 
