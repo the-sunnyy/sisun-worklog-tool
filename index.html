@@ -1091,7 +1091,8 @@ async function t_parse(){
 
       for (const line of day.lines) {
         const ownerTag = line.match(/\(([^)]+)\)\s*$/);
-        if (ownerTag && owner && ownerTag[1].trim() !== owner) {
+        const isHourMarker = ownerTag && /^\d+(\.\d+)?$/.test(ownerTag[1].trim());
+        if (ownerTag && !isHourMarker && owner && ownerTag[1].trim() !== owner) {
           excluded.push({ line, reason: `담당자 "${ownerTag[1].trim()}" (본인 아님)`, date: reqDate });
           continue;
         }
