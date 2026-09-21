@@ -927,11 +927,12 @@ function extractQuantities(text){
     found.push({ type: m[2].replace(/\s+/g,''), n: parseInt(m[1], 10) });
     claimed.push([m.index, m.index + m[0].length]);
   }
-  /* 키워드와 숫자 사이에 다른 말이 끼어 특정 유형을 못 정한 "N종"은 베리로 취급 */
+  /* 키워드와 숫자 사이에 다른 말이 끼어 특정 유형을 못 정한 "N종"은, 줄에 "신규"만 있고 "베리"가 없으면 신규로, 그 외엔 베리로 취급 */
+  const fallbackType = (/신규/.test(text) && !/베리/.test(text)) ? '신규' : '베리';
   const generic = /(\d+)\s*종/g;
   while ((m = generic.exec(text)) !== null) {
     const overlaps = claimed.some(([s, e]) => m.index < e && m.index + m[0].length > s);
-    if (!overlaps) found.push({ type: '베리', n: parseInt(m[1], 10) });
+    if (!overlaps) found.push({ type: fallbackType, n: parseInt(m[1], 10) });
   }
   return found;
 }
