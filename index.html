@@ -767,6 +767,7 @@ function t_loadSettings(){
   if (saved.tabName) $('t_tabName').value = saved.tabName;
   if (saved.apiKey) $('t_apiKey').value = saved.apiKey;
   if (saved.lookback) $('t_lookback').value = saved.lookback;
+  if (saved.rawText) $('t_rawText').value = saved.rawText;
   $('t_date').value = todayLocal();
 }
 
@@ -777,6 +778,7 @@ function t_saveSettings(){
     tabName: $('t_tabName').value.trim(),
     apiKey: $('t_apiKey').value.trim(),
     lookback: $('t_lookback').value.trim(),
+    rawText: $('t_rawText').value,
   }));
 }
 
@@ -1131,7 +1133,7 @@ function t_renderResult(rows, excluded){
 }
 
 $('t_parseBtn').onclick = t_parse;
-['t_owner', 't_sheetId', 't_tabName', 't_apiKey', 't_lookback'].forEach(id => $(id).addEventListener('input', t_saveSettings));
+['t_owner', 't_sheetId', 't_tabName', 't_apiKey', 't_lookback', 't_rawText'].forEach(id => $(id).addEventListener('input', t_saveSettings));
 
 window.onload = () => { s_loadSettings(); t_loadSettings(); };
 </script>
