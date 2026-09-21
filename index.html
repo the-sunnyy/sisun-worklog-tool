@@ -888,10 +888,12 @@ function shiftPastWeekend(dateStr){
 function detectBrand(text){
   if (/시선/.test(text)) return '시선인터내셔널';
   if (/LG\s*전자|엘지전자/.test(text)) return 'LG전자';
+  if (/LG\s*U\+/i.test(text)) return 'LG U+';
   if (/잇미샤/.test(text)) return '잇미샤';
   if (/미샤/.test(text)) return '미샤';
   if (/EBM/i.test(text)) return 'EBM';
   for (const b of KNOWN_BRANDS) { if (text.includes(b)) return b; }
+  if (/\bLG\b/.test(text)) return 'LG전자';
   return '';
 }
 
@@ -911,10 +913,13 @@ function extractProjectKey(text){
 }
 
 function extractQuantities(text){
-  const re = /(신규|베리|템플릿|썸네일|비즈보드|스마트채널|언어\s*베리|단컷|캐러셀|싱글|브랜드검색|영상)\s*(\d+)\s*종/g;
+  const KEYWORDS = '신규|베리|템플릿|썸네일|비즈보드|스마트채널|언어\\s*베리|단컷|캐러셀|싱글|브랜드검색|영상';
+  const forward = new RegExp(`(${KEYWORDS})(?:포함)?\\s*(\\d+)\\s*종`, 'g');
+  const backward = new RegExp(`(\\d+)\\s*종\\s*(${KEYWORDS})`, 'g');
   const found = [];
   let m;
-  while ((m = re.exec(text)) !== null) found.push({ type: m[1].replace(/\s+/g,''), n: parseInt(m[2], 10) });
+  while ((m = forward.exec(text)) !== null) found.push({ type: m[1].replace(/\s+/g,''), n: parseInt(m[2], 10) });
+  while ((m = backward.exec(text)) !== null) found.push({ type: m[2].replace(/\s+/g,''), n: parseInt(m[1], 10) });
   return found;
 }
 
