@@ -767,7 +767,7 @@ function t_loadSettings(){
   if (saved.tabName) $('t_tabName').value = saved.tabName;
   if (saved.apiKey) $('t_apiKey').value = saved.apiKey;
   if (saved.lookback) $('t_lookback').value = saved.lookback;
-  $('t_date').value = new Date().toISOString().slice(0,10);
+  $('t_date').value = todayLocal();
 }
 
 function t_saveSettings(){
@@ -780,11 +780,18 @@ function t_saveSettings(){
   }));
 }
 
+function todayLocal(){
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
 function shiftPastWeekend(dateStr){
-  const d = new Date(dateStr + 'T00:00:00');
-  const day = d.getDay();
-  if (day === 6) d.setDate(d.getDate() + 2);
-  else if (day === 0) d.setDate(d.getDate() + 1);
+  const d = new Date(dateStr + 'T00:00:00Z');
+  const day = d.getUTCDay();
+  if (day === 6) d.setUTCDate(d.getUTCDate() + 2);
+  else if (day === 0) d.setUTCDate(d.getUTCDate() + 1);
   return d.toISOString().slice(0,10);
 }
 
@@ -951,7 +958,7 @@ async function t_parse(){
 
   try {
     const owner = $('t_owner').value.trim();
-    const defaultDate = $('t_date').value || new Date().toISOString().slice(0,10);
+    const defaultDate = $('t_date').value || todayLocal();
     const rawText = $('t_rawText').value;
     const days = parseMultiDayText(rawText, defaultDate);
 
