@@ -1024,7 +1024,10 @@ async function t_fetchRecentRows(){
   const range = encodeURIComponent(`${tabName}!F1:G${lookback}`);
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`트래킹 시트 조회 실패 (${res.status})`);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`트래킹 시트 조회 실패 (${res.status}): ${text.slice(0, 200)}`);
+  }
   const json = await res.json();
   return (json.values || []).map(r => (r[1] || '')).filter(Boolean);
 }
