@@ -787,6 +787,11 @@ function todayLocal(){
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
+function mdOnly(iso){
+  const [, m, d] = iso.split('-');
+  return `${parseInt(m, 10)}/${parseInt(d, 10)}`;
+}
+
 function shiftPastWeekend(dateStr){
   const d = new Date(dateStr + 'T00:00:00Z');
   const day = d.getUTCDay();
@@ -835,27 +840,27 @@ function classify(text, quantities){
 
   if (has('비즈보드') || (has('스마트채널') && /비즈보드/.test(text))) {
     result.level = 'D';
-    result.summary = '비즈보드/스마트채널 세트 제작';
+    result.summary = '';
     result.cols['비즈보드'] = qty('비즈보드') || qty('스마트채널');
     result.needsReview = true;
-    result.note = '비즈보드·스마트채널 수량을 하나의 컬럼에 넣었습니다. 시트에 썸네일/이미지베리로 나눠 적는 관행이면 직접 나눠주세요.';
+    result.note = '비즈보드/스마트채널은 "작업개요" 드롭다운에 맞는 항목이 없어 직접 선택해야 합니다. 수량은 비즈보드 컬럼에 넣었습니다.';
     return result;
   }
   if (/브랜드검색/.test(text) && has('영상')) {
     result.level = 'E';
-    result.summary = '브랜드검색 영상 베리에이션';
+    result.summary = '사이즈 베리에이션';
     result.cols['영상(2)'] = qty('영상');
     return result;
   }
   if (has('템플릿')) {
     result.level = 'B';
-    result.summary = '템플릿 활용 제작';
+    result.summary = '템플릿 활용';
     result.cols['템플릿 활용'] = qty('템플릿') || qty('베리') || 1;
     return result;
   }
   if (has('썸네일')) {
     result.level = 'D';
-    result.summary = '썸네일 제작';
+    result.summary = '썸네일/오브젝트 제작';
     result.cols['썸네일 제작'] = qty('썸네일');
     return result;
   }
@@ -867,27 +872,27 @@ function classify(text, quantities){
   }
   if (has('단컷')) {
     result.level = has('베리') ? 'E' : 'A';
-    result.summary = '단컷 모션 ' + (has('베리') ? '베리에이션' : '신규 제작');
+    result.summary = has('베리') ? '사이즈 베리에이션' : '단컷모션신규제작';
     result.cols['단컷 모션'] = qty('단컷');
     return result;
   }
   if (has('영상')) {
     const isNew = /신규/.test(text) && !/베리/.test(text);
     result.level = isNew ? 'A' : 'E';
-    result.summary = isNew ? '영상 신규 제작' : '영상 베리에이션';
+    result.summary = isNew ? '신규제작' : '사이즈 베리에이션';
     result.cols[isNew ? '영상 편집' : '영상(2)'] = qty('영상');
     return result;
   }
   if (has('신규') && has('베리')) {
     result.level = 'A';
-    result.summary = '신규 + 베리 제작';
+    result.summary = '신규제작';
     if (has('캐러셀')) { result.cols['캐러셀'] = qty('신규'); result.cols['캐러셀(2)'] = qty('베리'); }
     else { result.cols['신규 이미지'] = qty('신규'); result.cols['베리'] = qty('베리'); }
     return result;
   }
   if (has('신규')) {
     result.level = 'A';
-    result.summary = '신규 제작';
+    result.summary = '신규제작';
     if (has('캐러셀')) result.cols['캐러셀'] = qty('신규');
     else if (has('싱글')) result.cols['싱글 기획'] = qty('신규');
     else result.cols['신규 이미지'] = qty('신규');
@@ -1040,7 +1045,7 @@ function t_renderResult(rows, excluded){
     html += '<div class="tbl-wrap"><table><thead><tr><th>#</th><th>날짜</th>' + T_COLUMNS.map(c => `<th>${c}</th>`).join('') + '<th>메모</th></tr></thead><tbody>';
     rows.forEach((r, i) => {
       const cls = r.isDup ? 'flag-dup' : (r.needsReview ? 'flag-review' : '');
-      html += `<tr class="${cls}" data-idx="${i}"><td>${i+1}</td><td>${r.reqDate}</td>`;
+      html += `<tr class="${cls}" data-idx="${i}"><td>${i+1}</td><td>${mdOnly(r.reqDate)}</td>`;
       T_COLUMNS.forEach(c => {
         html += `<td><input data-col="${c}" value="${(r.cols[c] ?? '').toString().replace(/"/g,'&quot;')}" /></td>`;
       });
@@ -1070,8 +1075,8 @@ function t_renderResult(rows, excluded){
     html += '<div class="tbl-wrap"><table><thead><tr><th>#</th><th>요청일</th><th>완료일</th></tr></thead><tbody>';
     rows.forEach((r, i) => {
       html += `<tr data-idx="${i}"><td>${i+1}</td>
-        <td><input data-bcol="reqDate" value="${r.reqDate}" /></td>
-        <td><input data-bcol="doneDate" value="${r.doneDate}" /></td></tr>`;
+        <td><input data-bcol="reqDate" value="${mdOnly(r.reqDate)}" /></td>
+        <td><input data-bcol="doneDate" value="${mdOnly(r.doneDate)}" /></td></tr>`;
     });
     html += '</tbody></table></div>';
     html += '<div class="row-actions"><button class="ghost copy-blockB" id="t_copyB">② B 블록 복사 (2열)</button></div>';
@@ -1080,7 +1085,7 @@ function t_renderResult(rows, excluded){
 
   if (excluded.length > 0) {
     html += '<div class="card"><h2>제외된 항목 <span class="badge dim">' + excluded.length + '</span></h2><ul class="excluded-list">';
-    excluded.forEach(e => { html += `<li>[${e.date}] "${e.line}" — ${e.reason}</li>`; });
+    excluded.forEach(e => { html += `<li>[${mdOnly(e.date)}] "${e.line}" — ${e.reason}</li>`; });
     html += '</ul></div>';
   }
 
