@@ -208,6 +208,15 @@
   input:focus, textarea:focus{ outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft); }
   textarea{ resize:vertical; font-family:var(--mono); font-size:14px; line-height:1.6; }
 
+  .history-tabs{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .history-tabs:empty{ display:none; }
+  .history-tab{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:6px 6px 6px 12px; border-radius:999px; background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim); cursor:pointer; }
+  .history-tab:hover{ border-color:var(--violet); color:var(--violet-ink); }
+  .history-tab.active{ background:var(--gradient-violet); color:#fff; border-color:transparent; }
+  .history-tab .del{ display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:rgba(0,0,0,0.12); font-size:11px; line-height:1; }
+  .history-tab.active .del{ background:rgba(255,255,255,0.25); }
+  .history-tab .del:hover{ background:var(--danger); color:#fff; }
+
   .row-actions{ display:flex; align-items:center; gap:10px; margin-top:18px; flex-wrap:wrap; }
   button.primary{
     appearance:none; border:none; cursor:pointer; background:var(--gradient-blue); color:#fff;
@@ -342,6 +351,7 @@
       </div>
       <div class="field" style="margin-top:12px;">
         <label>업무 텍스트</label>
+        <div id="t_historyTabs" class="history-tabs"></div>
         <textarea id="t_rawText" rows="14" placeholder="9/8
 - 지인페스타_키비주얼 신규 3종, 베리 5종 제작
 - 팀회의
@@ -760,6 +770,8 @@ const KNOWN_BRANDS = ['랄프로렌','설화수','LX하우시스US','LX하우시
 const EXCLUDE_KEYWORDS = ['회의','미팅','면담','VC','스터디','테스트','레벨업','교육','인수인계',
   '계정확인','사이즈확인','우선순위','확인','조율','기타','기획전달'];
 
+const T_HISTORY_KEY = 'tracking-worklog-history';
+
 function t_loadSettings(){
   const saved = JSON.parse(localStorage.getItem(T_STORAGE_KEY) || '{}');
   if (saved.owner) $('t_owner').value = saved.owner;
@@ -767,8 +779,21 @@ function t_loadSettings(){
   if (saved.tabName) $('t_tabName').value = saved.tabName;
   if (saved.apiKey) $('t_apiKey').value = saved.apiKey;
   if (saved.lookback) $('t_lookback').value = saved.lookback;
-  if (saved.rawText) $('t_rawText').value = saved.rawText;
   $('t_date').value = todayLocal();
+
+  if (saved.rawText) {
+    const migrated = t_loadHistory();
+    if (!migrated[$('t_date').value]) {
+      migrated[$('t_date').value] = saved.rawText;
+      t_saveHistory(migrated);
+    }
+    delete saved.rawText;
+    localStorage.setItem(T_STORAGE_KEY, JSON.stringify(saved));
+  }
+
+  const history = t_loadHistory();
+  $('t_rawText').value = history[$('t_date').value] || '';
+  t_renderHistoryTabs();
 }
 
 function t_saveSettings(){
@@ -778,8 +803,65 @@ function t_saveSettings(){
     tabName: $('t_tabName').value.trim(),
     apiKey: $('t_apiKey').value.trim(),
     lookback: $('t_lookback').value.trim(),
-    rawText: $('t_rawText').value,
   }));
+}
+
+function t_loadHistory(){
+  return JSON.parse(localStorage.getItem(T_HISTORY_KEY) || '{}');
+}
+
+function t_saveHistory(history){
+  localStorage.setItem(T_HISTORY_KEY, JSON.stringify(history));
+}
+
+function t_historyLabel(dateStr){
+  const [, m, d] = dateStr.split('-');
+  return `${parseInt(m, 10)}/${parseInt(d, 10)} 업무일지`;
+}
+
+function t_saveCurrentToHistory(){
+  const date = $('t_date').value;
+  if (!date) return;
+  const text = $('t_rawText').value;
+  const history = t_loadHistory();
+  if (text.trim()) history[date] = text;
+  else delete history[date];
+  t_saveHistory(history);
+  t_renderHistoryTabs();
+}
+
+function t_switchToDate(date){
+  const history = t_loadHistory();
+  $('t_date').value = date;
+  $('t_rawText').value = history[date] || '';
+  t_renderHistoryTabs();
+}
+
+function t_renderHistoryTabs(){
+  const history = t_loadHistory();
+  const dates = Object.keys(history).sort().reverse();
+  const activeDate = $('t_date').value;
+  const container = $('t_historyTabs');
+  if (dates.length === 0) { container.innerHTML = ''; return; }
+  container.innerHTML = dates.map(date => {
+    const cls = date === activeDate ? 'history-tab active' : 'history-tab';
+    return `<span class="${cls}" data-date="${date}">${t_historyLabel(date)}<span class="del" data-date="${date}" title="삭제">×</span></span>`;
+  }).join('');
+  container.querySelectorAll('.history-tab').forEach(tab => {
+    tab.addEventListener('click', () => t_switchToDate(tab.dataset.date));
+  });
+  container.querySelectorAll('.del').forEach(del => {
+    del.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const date = del.dataset.date;
+      if (!confirm(`${t_historyLabel(date)} 삭제할까요?`)) return;
+      const history = t_loadHistory();
+      delete history[date];
+      t_saveHistory(history);
+      if (date === $('t_date').value) $('t_rawText').value = '';
+      t_renderHistoryTabs();
+    });
+  });
 }
 
 function todayLocal(){
@@ -981,6 +1063,7 @@ async function t_parse(){
   $('t_result').innerHTML = '';
   $('t_parseBtn').disabled = true;
   t_saveSettings();
+  t_saveCurrentToHistory();
 
   try {
     const owner = $('t_owner').value.trim();
@@ -1133,7 +1216,9 @@ function t_renderResult(rows, excluded){
 }
 
 $('t_parseBtn').onclick = t_parse;
-['t_owner', 't_sheetId', 't_tabName', 't_apiKey', 't_lookback', 't_rawText'].forEach(id => $(id).addEventListener('input', t_saveSettings));
+['t_owner', 't_sheetId', 't_tabName', 't_apiKey', 't_lookback'].forEach(id => $(id).addEventListener('input', t_saveSettings));
+$('t_rawText').addEventListener('input', t_saveCurrentToHistory);
+$('t_date').addEventListener('change', () => t_switchToDate($('t_date').value));
 
 window.onload = () => { s_loadSettings(); t_loadSettings(); };
 </script>
