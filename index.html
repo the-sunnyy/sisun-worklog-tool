@@ -1042,15 +1042,14 @@ function t_renderResult(rows, excluded){
     html += '<h2><span class="step-badge a">1</span>A 블록 · 브랜드명 ~ 카피 only (22열)</h2>';
     html += '<div class="paste-target a">시트에서 <b>"브랜드명"</b> 셀을 클릭한 뒤 여기서 복사한 걸 붙여넣으세요</div>';
     html += '<div class="desc"><span class="badge warn">확인 필요</span> 또는 <span class="badge danger">중복 의심</span> 표시가 붙은 행은 값을 직접 수정한 뒤 복사해주세요.</div>';
-    html += '<div class="tbl-wrap"><table><thead><tr><th>#</th><th>날짜</th>' + T_COLUMNS.map(c => `<th>${c}</th>`).join('') + '<th>메모</th></tr></thead><tbody>';
+    html += '<div class="tbl-wrap"><table><thead><tr><th>#</th><th>날짜</th>' + T_COLUMNS.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
     rows.forEach((r, i) => {
       const cls = r.isDup ? 'flag-dup' : (r.needsReview ? 'flag-review' : '');
       html += `<tr class="${cls}" data-idx="${i}"><td>${i+1}</td><td>${mdOnly(r.reqDate)}</td>`;
       T_COLUMNS.forEach(c => {
         html += `<td><input data-col="${c}" value="${(r.cols[c] ?? '').toString().replace(/"/g,'&quot;')}" /></td>`;
       });
-      const badge = r.isDup ? `<span class="badge danger">중복 의심</span> ${r.dupNote}` : (r.needsReview ? `<span class="badge warn">확인 필요</span> ${r.note}` : '');
-      html += `<td>${badge}</td></tr>`;
+      html += '</tr>';
     });
     html += '</tbody></table></div>';
 
