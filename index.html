@@ -1041,6 +1041,18 @@ function t_renderResult(rows, excluded){
       html += `<td>${badge}</td></tr>`;
     });
     html += '</tbody></table></div>';
+
+    const flagged = rows.map((r, i) => ({ i, r })).filter(({ r }) => r.isDup || r.needsReview);
+    if (flagged.length > 0) {
+      html += `<div class="group"><h3>확인 필요 항목 ${flagged.length}건 — 왜 걸렸는지</h3><ul class="excluded-list">`;
+      flagged.forEach(({ i, r }) => {
+        const tag = r.isDup ? '<span class="badge danger">중복 의심</span>' : '<span class="badge warn">확인 필요</span>';
+        const reason = r.isDup ? r.dupNote : r.note;
+        html += `<li>#${i + 1} ${r.cols['업무 요청내용'] || r.raw} — ${tag} ${reason}</li>`;
+      });
+      html += '</ul></div>';
+    }
+
     html += '<div class="row-actions"><button class="ghost copy-blockA" id="t_copyA">① A 블록 복사 (22열)</button></div>';
     html += '</div>';
 
