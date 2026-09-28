@@ -33,6 +33,9 @@
     --amber-soft: #fef3dd;
     --rose: #f4356a;
     --rose-soft: #fde5ec;
+    --brown: #8a5a34;
+    --brown-soft: #f1e4d6;
+    --brown-ink: #7a4a24;
 
     --accent: var(--blue);
     --accent-soft: var(--blue-soft);
@@ -83,6 +86,8 @@
       --green-ink: #7fe6b6;
       --amber-soft: #382c17;
       --rose-soft: #3a1e28;
+      --brown-soft: #362a1e;
+      --brown-ink: #d9a978;
       --accent-contrast: #14141a;
       --warn: #e2b566;
       --danger: #f28aa6;
@@ -114,6 +119,8 @@
     --green-ink: #7fe6b6;
     --amber-soft: #382c17;
     --rose-soft: #3a1e28;
+    --brown-soft: #362a1e;
+    --brown-ink: #d9a978;
     --accent-contrast: #14141a;
     --warn: #e2b566;
     --danger: #f28aa6;
@@ -246,6 +253,7 @@
   .badge.s-green{ background:var(--ok-soft); color:var(--ok); }
   .badge.s-amber{ background:var(--warn-soft); color:var(--warn); }
   .badge.s-rose{ background:var(--danger-soft); color:var(--danger); }
+  .badge.s-brown{ background:var(--brown-soft); color:var(--brown-ink); }
   .badge.new{ background:var(--ok-soft); color:var(--ok); margin-left:6px; }
   .badge.lg{ font-size:20px; padding:8px 18px 8px 14px; }
   .badge.lg::before{ width:9px; height:9px; }
@@ -277,6 +285,14 @@
   .group h3{ margin:0; font-size:15px; display:flex; align-items:center; gap:8px; }
   .group-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
   .group-head button{ flex-shrink:0; }
+  .head-actions{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .fold-btn{
+    appearance:none; border:1px solid var(--border); cursor:pointer; background:var(--surface); color:var(--text-dim);
+    width:34px; height:34px; border-radius:999px; font-size:13px; line-height:1;
+    display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+    transition:background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .fold-btn:hover{ border-color:var(--blue); color:var(--blue-ink); background:var(--blue-soft); }
   pre{ background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:14px 16px; font-size:14px; line-height:1.8; white-space:pre-wrap; font-family:var(--mono); margin:0; }
 
   .excluded-list{ font-size:13px; color:var(--text-faint); margin-top:6px; list-style:none; padding:0; }
@@ -440,8 +456,10 @@ const S_STATUS_ACCENT = {
   's-green': 'var(--ok)',
   's-amber': 'var(--warn)',
   's-rose': 'var(--danger)',
+  's-brown': 'var(--brown-ink)',
 };
 function s_statusClass(status){
+  if (status === '완료') return 's-brown';
   let hash = 0;
   for (let i = 0; i < status.length; i++) hash = (hash * 31 + status.charCodeAt(i)) >>> 0;
   return S_STATUS_PALETTE[hash % S_STATUS_PALETTE.length];
@@ -710,10 +728,12 @@ function s_renderResult(tableRows, groups, aggregate, tabName, hasBaseline) {
     Object.keys(groups).forEach(status => {
       const items = groups[status];
       const accent = S_STATUS_ACCENT[s_statusClass(status)];
+      const isCompleted = status === '완료';
       html += `<div class="card group" style="--group-accent:${accent}">`;
 
-      if (status === '완료') {
-        html += `<h2 style="margin-bottom:14px;">${s_statusBadge(status, true)}</h2>`;
+      if (isCompleted) {
+        html += `<div class="group-head"><h2 style="margin-bottom:0;">${s_statusBadge(status, true)}</h2><div class="head-actions"><button class="ghost fold-btn" data-fold aria-expanded="false">▸</button></div></div>`;
+        html += `<div class="fold-body" style="display:none;">`;
         const byWeek = {};
         const weekOrder = [];
         items.forEach(it => {
@@ -725,10 +745,11 @@ function s_renderResult(tableRows, groups, aggregate, tabName, hasBaseline) {
           html += `<div class="group"><div class="group-head"><h3>${week}</h3><button class="ghost copy" data-text="${encodeURIComponent(text)}">복사</button></div>`;
           html += `<pre>${text}</pre></div>`;
         });
+        html += `</div>`;
       } else {
         const text = items.map(it => it.line).join('\n');
-        html += `<div class="group-head"><h2 style="margin-bottom:0;">${s_statusBadge(status, true)}</h2><button class="ghost copy" data-text="${encodeURIComponent(text)}">복사</button></div>`;
-        html += `<pre>${text}</pre>`;
+        html += `<div class="group-head"><h2 style="margin-bottom:0;">${s_statusBadge(status, true)}</h2><div class="head-actions"><button class="ghost copy" data-text="${encodeURIComponent(text)}">복사</button><button class="ghost fold-btn" data-fold aria-expanded="true">▾</button></div></div>`;
+        html += `<div class="fold-body"><pre>${text}</pre></div>`;
       }
       html += '</div>';
     });
@@ -739,6 +760,19 @@ function s_renderResult(tableRows, groups, aggregate, tabName, hasBaseline) {
 
   $('s_result').innerHTML = html;
   bindCopyButtons($('s_result'));
+  bindFoldButtons($('s_result'));
+}
+
+function bindFoldButtons(scope){
+  scope.querySelectorAll('.fold-btn').forEach(btn => {
+    btn.onclick = () => {
+      const body = btn.closest('.card').querySelector('.fold-body');
+      const isOpen = btn.getAttribute('aria-expanded') === 'true';
+      body.style.display = isOpen ? 'none' : '';
+      btn.setAttribute('aria-expanded', String(!isOpen));
+      btn.textContent = isOpen ? '▸' : '▾';
+    };
+  });
 }
 
 function bindCopyButtons(scope){
