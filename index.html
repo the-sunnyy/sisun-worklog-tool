@@ -521,7 +521,7 @@ function buildLogLine(row) {
   if (video > 0) parts.push(`영상 ${video}종`);
 
   if (materialType.includes('비즈보드') && materialType.includes('스마트채널')) {
-    parts.push(`비즈보드 set ${veri || image}종`);
+    parts.push(`비즈보드 ${(veri || image) * 2}종`);
   } else {
     if (image > 0) parts.push(`신규 ${image}종`);
     if (veri > 0) parts.push(`베리 ${veri}종`);
