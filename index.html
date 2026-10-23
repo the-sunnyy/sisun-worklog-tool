@@ -484,6 +484,7 @@
   .hint-line{ font-size:12.5px; color:var(--text-faint); margin-top:10px; }
   .wl-days{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
   .wl-days:empty{ display:none; }
+  .wl-days-label{ font-size:12.5px; font-weight:600; color:var(--text-faint); align-self:center; margin-right:4px; }
   .wl-day{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; padding:3px 10px; border-radius:999px; background:var(--sunken); color:var(--text-dim); font-variant-numeric:tabular-nums; }
   .wl-day b{ font-weight:800; color:var(--text); }
   .wl-day.ok{ background:var(--violet-soft); color:var(--violet-ink); }
@@ -2043,10 +2044,10 @@ async function wl_fetch(){
         return;
       }
       blocks.push(`${label}\n${lines.join('\n')}`);
-      chips.push(`<span class="wl-day ok">${label} <b>${lines.length}</b>줄</span>`);
+      chips.push(`<span class="wl-day ok" title="업무일지 ${label}에 적힌 줄 ${lines.length}개">${label} <b>${lines.length}</b>줄</span>`);
     });
 
-    $('t_wlDays').innerHTML = chips.join('');
+    $('t_wlDays').innerHTML = chips.length ? `<span class="wl-days-label" title="업무일지에서 날짜별로 읽은 줄 수예요. 회의 등은 변환할 때 빠져요.">업무일지에서 읽은 줄</span>${chips.join('')}` : '';
     if (!blocks.length) {
       $('t_wlLog').textContent = '이 기간에 불러올 업무가 없어요.';
       return;
