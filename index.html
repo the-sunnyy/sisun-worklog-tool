@@ -318,6 +318,21 @@
   .sec-head.wed .sec-num{ color:var(--teal); }
 
   .note-line{ font-size:14px; color:var(--text-dim); margin:0; }
+  /* 시선 항목 표: 짧고 촘촘하게 + 브랜드 칩 */
+  .items-table th{ padding:6px 8px; }
+  .items-table th:nth-child(1){ width:84px; }
+  .items-table th:nth-child(2){ width:92px; }
+  .items-table th:nth-child(3){ width:190px; }
+  .items-table td{ padding:6px 8px; font-size:13.5px; }
+  .items-table .badge{ font-size:11.5px; padding:1px 8px 1px 6px; }
+  .items-table .it-date{ color:var(--text-dim); }
+  .items-table .it-name{ font-weight:600; }
+  .items-table .it-name .badge{ margin-left:8px; }
+  .brand-chip{ display:inline-flex; align-items:center; font-size:11.5px; font-weight:700; padding:1px 8px; border-radius:6px; margin-right:4px; white-space:nowrap; }
+  .br-mi{ background:var(--rose-soft); color:var(--rose-ink); }
+  .br-it{ background:var(--blue-soft); color:var(--blue-ink); }
+  .br-ebm{ background:var(--green-soft); color:var(--green-ink); }
+  .br-etc{ background:var(--sunken); color:var(--text-dim); }
   .list-title{ font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; margin-bottom:6px; }
   .new-toggle > summary .list-title{ margin:0; color:var(--text); }
   .new-toggle[open] > summary{ margin-bottom:4px; }
@@ -1045,7 +1060,7 @@ async function s_run() {
 
       if (!groups[status]) groups[status] = [];
       groups[status].push({ line, week });
-      tableRows.push({ status, date: dateStr, label: `${row.brand}-${row.campaign}`, id: s_itemId(row) });
+      tableRows.push({ status, date: dateStr, label: `${row.brand}-${row.campaign}`, brand: row.brand.trim(), campaign: row.campaign.trim(), id: s_itemId(row) });
     }
 
     const aggregate = s_aggregate(values, headerIdx, col);
@@ -1071,6 +1086,14 @@ function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;',
 
 function s_aggRowText(label, b) {
   return `${label} 신규 ${b.new}종, 베리 ${b.veri}종${b.biz ? `, 비즈보드 ${b.biz}종` : ''}${b.video ? `, 영상 ${b.video}종` : ''} (총 ${b.total}종)`;
+}
+
+/* 브랜드 칩: 미샤 빨강 · 잇미샤 파랑 · EBM 초록 (피그마 섹션 색점과 동일). "미샤, 잇미샤, EBM"처럼 여러 개면 칩 여러 개 */
+function s_brandChips(brand){
+  return String(brand || '').split(/\s*[,/]\s*/).filter(Boolean).map(b => {
+    const cls = /잇미샤/.test(b) ? 'br-it' : /미샤/.test(b) ? 'br-mi' : /EBM/i.test(b) ? 'br-ebm' : 'br-etc';
+    return `<span class="brand-chip ${cls}">${esc(b)}</span>`;
+  }).join('');
 }
 
 function s_statusBadge(status, big){
@@ -1203,17 +1226,20 @@ function s_renderResult(tableRows, groups, aggregate, wedAgg, tabName, hasBaseli
 
   /* 1. 새 항목 + 전체 목록 */
   html += s_secHead('sec-new', 1, hasBaseline ? '새로 추가된 항목' : '전체 항목 목록',
-    hasBaseline ? '지난번 정리하기 이후 시트에 새로 생긴 행입니다.' : '이 탭은 처음 정리해서 비교 기준이 없어요. 다음 정리부터 새로 생긴 행이 따로 표시됩니다.');
+    hasBaseline ? '' : '처음 정리한 탭이라 다음 정리부터 새 항목이 표시돼요.');
   const rowsTable = (rows, showNew) => {
-    let t = '<div class="tbl-wrap"><table><thead><tr><th>상태</th><th>날짜</th><th>브랜드-기획전명</th></tr></thead><tbody>';
-    rows.forEach(r => { t += `<tr class="${showNew && r.isNew ? 'flag-new' : ''}"><td>${s_statusBadge(r.status)}</td><td>${esc(r.date)}</td><td>${esc(r.label)}${showNew && r.isNew ? '<span class="badge new" style="margin-left:8px;">NEW</span>' : ''}</td></tr>`; });
+    let t = '<div class="tbl-wrap"><table class="items-table"><thead><tr><th>상태</th><th>날짜</th><th>브랜드</th><th>기획전</th></tr></thead><tbody>';
+    rows.forEach(r => {
+      const isNew = showNew && r.isNew;
+      t += `<tr class="${isNew ? 'flag-new' : ''}"><td>${s_statusBadge(r.status)}</td><td class="it-date">${esc(r.date)}</td><td>${s_brandChips(r.brand)}</td><td class="it-name">${esc(r.campaign)}${isNew ? '<span class="badge new">NEW</span>' : ''}</td></tr>`;
+    });
     return t + '</tbody></table></div>';
   };
   html += '<div class="card list-card">';
   if (hasBaseline) {
     if (newRows.length > 0) {
       const newOpen = ui_load().newOpen !== false;
-      html += `<details class="inline-toggle new-toggle"${newOpen ? ' open' : ''}><summary>${ICON_CHEVRON_SM}<span class="list-title">새로 들어온 항목 <span class="badge new">${newRows.length}건</span></span></summary>${rowsTable(newRows)}</details>`;
+      html += `<details class="inline-toggle new-toggle"${newOpen ? ' open' : ''}><summary>${ICON_CHEVRON_SM}<span class="list-title">새 항목 <span class="badge new">${newRows.length}건</span></span></summary>${rowsTable(newRows)}</details>`;
     } else {
       html += '<p class="note-line">지난 정리하기 이후 새로 들어온 항목이 없습니다.</p>';
     }
@@ -1221,7 +1247,7 @@ function s_renderResult(tableRows, groups, aggregate, wedAgg, tabName, hasBaseli
   if (tableRows.length === 0) {
     html += '<p class="note-line">진행상황이 입력된 항목이 없습니다.</p></div>';
   } else {
-    html += `<details class="inline-toggle"${hasBaseline ? '' : ' open'}><summary>${ICON_CHEVRON_SM}전체 항목 목록 보기 (완료 포함 ${tableRows.length}건)</summary>${rowsTable(tableRows, true)}</details>`;
+    html += `<details class="inline-toggle"${hasBaseline ? '' : ' open'}><summary>${ICON_CHEVRON_SM}전체 목록 ${tableRows.length}건</summary>${rowsTable(tableRows, true)}</details>`;
     html += '</div>';
 
     /* 2. 상태별 로그 */
