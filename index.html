@@ -480,6 +480,8 @@
   details.plain-note > summary .chev{ transition:transform 0.15s; transform:rotate(-90deg); width:13px; height:13px; }
   details.plain-note[open] > summary .chev{ transform:none; }
   details.plain-note .note-body{ margin-top:8px; font-size:12.5px; color:var(--text-faint); }
+  .note-list{ list-style:none; padding:0; margin:8px 0 0; display:grid; gap:4px; }
+  .note-list b{ color:var(--text-dim); margin-right:6px; }
   /* 업무일지 불러오기 */
   .hint-line{ font-size:12.5px; color:var(--text-faint); margin-top:10px; }
   .wl-days{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
@@ -675,15 +677,6 @@
 9/10
 - 설화수 신규 컷 2종 제작"></textarea>
       </div>
-      <details class="legend">
-        <summary><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/></svg>제외/판정 기준 보기</summary>
-        <div class="legend-body">
-          다음 키워드가 포함된 줄은 결과물이 아닌 내부 업무로 보고 자동 제외합니다:
-          <ul><li>회의, 미팅, 면담, VC, 스터디, 테스트, 레벨업, 교육, 인수인계, 계정확인, 사이즈확인, 우선순위, 확인, 조율, 기타, 기획전달</li>
-          <li>"로고 제작"(신규 로고)도 제외 — 단, "로고 변경/베리"는 포함</li></ul>
-          작업레벨은 메모리에 저장된 기준(A=신규기획·신규제작, B=단순제작·템플릿활용, C=광고주 PSD 활용, D=썸네일·오브젝트 제작·언어베리, E=사이즈베리)을 따릅니다. 이 기준에 명확히 안 맞으면 레벨을 비워두고 <span class="badge warn">확인 필요</span>로 표시합니다.
-        </div>
-      </details>
     </div>
 
     <details class="card compact fold-card" id="t_settings">
@@ -721,11 +714,14 @@
     </div>
 
     <details class="plain-note">
-      <summary><svg class="i chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>이 탭 참고사항 (컬럼 구조 · 확인 필요 표시)</summary>
-      <div class="note-body">
-        사용자가 붙여넣어준 원본 스펙 문서가 인코딩 손상(모지바케)으로 일부 깨져 있어, <b>디자인 2팀 트래킹 시트</b> 메모리에 저장된 검증된 컬럼 구조를 기준으로 복원해 만들었습니다.
-        "싱글/캐러셀/영상" 수량 칸이 시트에 두 번씩 있는 등 원래 스펙에서도 애매하다고 표시된 부분은 <span class="badge warn">확인 필요</span> 표시만 해두고 자동으로 확정하지 않았습니다 — 표를 직접 눌러 값을 고친 뒤 복사해주세요.
-      </div>
+      <summary><svg class="i chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>제외 · 판정 기준 보기</summary>
+      <ul class="note-body note-list">
+        <li><b>빼는 줄</b> 회의·미팅·스터디·교육·확인·인수인계 같은 내부 업무, 시선 템플릿 제작, "수정"만 한 줄</li>
+        <li><b>날짜</b> 요청일 = 처음 나온 날 · 완료일 = "전달"이 처음 나온 날 (같은 기획전은 한 줄로)</li>
+        <li><b>레벨</b> A 신규제작 · B 템플릿 활용 · C 광고주 PSD · D 비즈보드·썸네일·언어 베리 · E 사이즈 베리</li>
+        <li><b>비즈보드</b> 세트 기준 (set 2종 → 썸네일 1 / 베리 1)</li>
+        <li><span class="badge warn">확인 필요</span> 표시된 행은 표에서 직접 고쳐서 복사</li>
+      </ul>
     </details>
   </section>
 </div>
