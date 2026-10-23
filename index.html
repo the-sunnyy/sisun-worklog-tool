@@ -1331,7 +1331,7 @@ const T_HISTORY_KEY = 'tracking-worklog-history';
 
 function t_loadSettings(){
   const saved = JSON.parse(localStorage.getItem(T_STORAGE_KEY) || '{}');
-  if (saved.owner) $('t_owner').value = saved.owner;
+  $('t_owner').value = saved.owner || '노진선';  /* 비어 있으면 담당팀 수식(VLOOKUP)이 #N/A가 됨 */
   if (saved.sheetId) $('t_sheetId').value = saved.sheetId;
   if (saved.tabName) $('t_tabName').value = saved.tabName;
   if (saved.apiKey) $('t_apiKey').value = saved.apiKey;
@@ -1925,6 +1925,8 @@ function t_bindEditTable(){
   const aBtn = $('t_copyA');
   if (aBtn) aBtn.onclick = () => {
     const live = t_liveRows();
+    const noOwner = live.filter(r => !String(r.cols['담당자'] || '').trim()).length;
+    if (noOwner && !confirm(`담당자가 비어 있는 행이 ${noOwner}개 있어요.\n비어 있으면 시트의 "담당팀"이 #N/A가 돼요. 그래도 복사할까요?`)) return;
     const tsv = live.map(r => T_COLUMNS.map(c => String(r.cols[c] ?? '')).join('\t')).join('\n');
     navigator.clipboard.writeText(tsv).then(() => { flashCopied(aBtn); toast(`A블록 ${live.length}행 복사 — 시트 "브랜드명" 칸에 붙여넣기`); });
   };
