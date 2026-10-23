@@ -319,6 +319,8 @@
 
   .note-line{ font-size:14px; color:var(--text-dim); margin:0; }
   .list-title{ font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .new-toggle > summary .list-title{ margin:0; color:var(--text); }
+  .new-toggle[open] > summary{ margin-bottom:4px; }
 
   /* 카드 안에서 접고 펴는 줄 (테두리 없음) */
   .inline-toggle{ margin-top:14px; padding-top:12px; border-top:1px solid var(--border); }
@@ -1210,7 +1212,8 @@ function s_renderResult(tableRows, groups, aggregate, wedAgg, tabName, hasBaseli
   html += '<div class="card list-card">';
   if (hasBaseline) {
     if (newRows.length > 0) {
-      html += `<div class="list-title">새로 들어온 항목 <span class="badge new">${newRows.length}건</span></div>${rowsTable(newRows)}`;
+      const newOpen = ui_load().newOpen !== false;
+      html += `<details class="inline-toggle new-toggle"${newOpen ? ' open' : ''}><summary>${ICON_CHEVRON_SM}<span class="list-title">새로 들어온 항목 <span class="badge new">${newRows.length}건</span></span></summary>${rowsTable(newRows)}</details>`;
     } else {
       html += '<p class="note-line">지난 정리하기 이후 새로 들어온 항목이 없습니다.</p>';
     }
@@ -1260,6 +1263,8 @@ function s_renderResult(tableRows, groups, aggregate, wedAgg, tabName, hasBaseli
   bindCopyButtons($('s_result'));
   bindFoldButtons($('s_result'));
   bindWeekSwitch($('s_result'));
+  const nt = $('s_result').querySelector('.new-toggle');
+  if (nt) nt.addEventListener('toggle', () => ui_save({ newOpen: nt.open }));
 }
 
 function bindFoldButtons(scope){
