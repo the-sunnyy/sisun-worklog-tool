@@ -85,6 +85,7 @@
     --accent-contrast: #1e1f24;
   }
   body[data-tab="tracking"]{ --accent: var(--violet); --accent-soft: var(--violet-soft); --accent-ink: var(--violet-ink); }
+  body[data-tab="media"]{ --accent: var(--teal); --accent-soft: var(--teal-soft); --accent-ink: var(--teal-ink); }
 
   /* 상태 색 세트 */
   .s-blue{ --c: var(--blue); --c-soft: var(--blue-soft); --c-ink: var(--blue-ink); }
@@ -139,6 +140,13 @@
   nav.tabs button .dot{ width:7px; height:7px; border-radius:50%; background:currentColor; opacity:0.5; }
   nav.tabs button[data-tab="sisun"].active .dot{ background:var(--blue); opacity:1; }
   nav.tabs button[data-tab="tracking"].active .dot{ background:var(--violet); opacity:1; }
+  nav.tabs button[data-tab="media"].active .dot{ background:var(--teal); opacity:1; }
+
+  /* 미디어 변환 탭: 별도 사이트(media-converter)를 그대로 끼워 넣고, 높이는 안쪽에서 알려준 만큼 늘린다 */
+  .media-frame{ display:block; width:100%; height:620px; border:0; background:transparent; }
+  .panel-head .ext-link{ display:inline-flex; align-items:center; gap:4px; margin-left:6px; font-weight:700; color:var(--accent-ink); text-decoration:none; white-space:nowrap; }
+  .panel-head .ext-link:hover{ text-decoration:underline; text-underline-offset:3px; }
+  .panel-head .ext-link svg.i{ width:13px; height:13px; }
 
   /* ================= 레이아웃 ================= */
   .shell{ max-width:1040px; margin:0 auto; padding:32px 24px 80px; }
@@ -569,6 +577,7 @@
     <nav class="tabs" role="tablist">
       <button class="tab-btn active" data-tab="sisun" role="tab"><span class="dot"></span>시선 업무일지 정리</button>
       <button class="tab-btn" data-tab="tracking" role="tab"><span class="dot"></span>트래킹 시트</button>
+      <button class="tab-btn" data-tab="media" role="tab"><span class="dot"></span>미디어 변환</button>
     </nav>
     <div class="top-actions">
       <button class="icon-btn" id="themeBtn" type="button" aria-label="라이트/다크 모드 전환" title="라이트/다크 모드 전환">
@@ -741,6 +750,16 @@
       </ul>
     </details>
   </section>
+
+  <!-- ============== TAB 3: 미디어 변환 ============== -->
+  <section id="panel-media" class="panel">
+    <div class="panel-head">
+      <div class="kicker">이미지 · 동영상 · 브라우저 안에서만 처리</div>
+      <h1>미디어 변환</h1>
+      <p>HEIC·PNG·JPG를 원하는 형식과 용량으로, MP4·MOV를 MP4·GIF로 바꿉니다. 파일은 업로드되지 않습니다.<a class="ext-link" href="https://the-sunnyy.github.io/media-converter/" target="_blank" rel="noopener">새 창에서 열기<svg class="i" viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></a></p>
+    </div>
+    <iframe class="media-frame" id="mediaFrame" title="미디어 변환기"></iframe>
+  </section>
 </div>
 
 <footer class="foot">
@@ -763,8 +782,30 @@ function switchTab(tab){
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
   document.body.dataset.tab = tab;
+  if (tab === 'media') media_load();
   ui_save({ tab });
 }
+
+/* ---------- 미디어 변환 탭 (media-converter 사이트를 embed 모드로 끼워 넣음) ---------- */
+const MEDIA_URL = 'https://the-sunnyy.github.io/media-converter/';
+// 변환 라이브러리가 무거워서 탭을 처음 열 때만 불러온다
+function media_load(){
+  const frame = $('mediaFrame');
+  if (frame.src) return;
+  frame.src = MEDIA_URL + '?embed=1' + (isDarkNow() ? '&theme=dark' : '');
+}
+function media_syncTheme(){
+  const frame = $('mediaFrame');
+  if (frame.src && frame.contentWindow) frame.contentWindow.postMessage({ type: 'mc-theme', theme: isDarkNow() ? 'dark' : 'light' }, '*');
+}
+// 안쪽에서 알려준 높이만큼 늘려서 iframe 안에 스크롤이 따로 생기지 않게 한다
+window.addEventListener('message', (e) => {
+  const frame = $('mediaFrame');
+  if (!frame || e.source !== frame.contentWindow || !e.data || e.data.type !== 'mc-height') return;
+  frame.style.height = Math.max(420, Number(e.data.height) || 0) + 'px';
+});
+// 테마를 직접 고르지 않았으면 시스템 설정을 따르므로, 시스템이 바뀔 때도 안쪽에 알려준다
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', media_syncTheme);
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.onclick = () => switchTab(btn.dataset.tab);
 });
@@ -779,6 +820,7 @@ $('themeBtn').onclick = () => {
   const next = isDarkNow() ? 'light' : 'dark';
   document.documentElement.dataset.theme = next;
   ui_save({ theme: next });
+  media_syncTheme();
 };
 
 /* ---------- 복사 알림 ---------- */
@@ -805,6 +847,7 @@ const ICON_CHEVRON_SM = '<svg class="i chev" viewBox="0 0 24 24"><path d="M6 9l6
 /* ⌘/Ctrl + Enter: 현재 탭의 실행 버튼 */
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter' || !(e.metaKey || e.ctrlKey)) return;
+  if (document.body.dataset.tab === 'media') return; // 미디어 탭에서는 업무일지 '정리하기'가 눌리지 않게
   const btn = document.body.dataset.tab === 'tracking' ? $('t_parseBtn') : $('s_runBtn');
   if (!btn.disabled) { e.preventDefault(); btn.click(); }
 });
@@ -2103,7 +2146,7 @@ $('t_date').addEventListener('change', () => t_switchToDate($('t_date').value));
 (() => {
   const ui = ui_load();
   if (ui.theme === 'light' || ui.theme === 'dark') document.documentElement.dataset.theme = ui.theme;
-  if (ui.tab === 'tracking') switchTab('tracking');
+  if (ui.tab === 'tracking' || ui.tab === 'media') switchTab(ui.tab);
 })();
 
 window.onload = () => {
