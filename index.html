@@ -1810,6 +1810,15 @@ async function t_parse(){
       $('t_log').textContent = e.message;
     }
 
+    /* 다른 날짜 탭(업무 텍스트 기록)에 토씨 하나까지 같은 줄이 있으면, 이미 그날 넣고 깜빡한 건 아닌지 신호로 씀 */
+    const otherHistory = Object.entries(t_loadHistory()).filter(([d]) => d !== defaultDate);
+    function t_findInOtherHistory(line){
+      const needle = line.trim();
+      if (!needle) return null;
+      const hit = otherHistory.find(([, text]) => text.split('\n').some(l => l.trim() === needle));
+      return hit ? hit[0] : null;
+    }
+
     const excluded = [];
     const lineRows = [];
 
@@ -1835,6 +1844,7 @@ async function t_parse(){
         if (cls.note) notes.push(cls.note);
         if (!brand) notes.push('브랜드를 자동으로 못 찾았습니다.');
         if (!hasBracket) notes.push('[프로젝트명] 표기가 없어 이름을 앞 단어로 추정했어요.');
+        const historyDupDate = t_findInOtherHistory(line);
 
         const colVals = {};
         T_COLUMNS.forEach(c => colVals[c] = '');
@@ -1853,6 +1863,7 @@ async function t_parse(){
           cols: colVals,
           needsReview: cls.needsReview || !brand || !hasBracket,
           notes,
+          historyDupDate,
           history: [],
         });
       }
@@ -1895,8 +1906,11 @@ async function t_parse(){
         r.notes.push('"전달" 기록이 없어 마지막으로 나온 날을 완료일로 넣었어요.');
       }
       const dup = existingTitles.find(t => t.includes(r.key));
-      r.isDup = !!dup;
-      r.dupNote = dup ? `기존 항목과 이름이 비슷합니다: "${dup.slice(0,40)}..."` : '';
+      r.isDup = !!dup || !!r.historyDupDate;
+      const dupNotes = [];
+      if (dup) dupNotes.push(`기존 항목과 이름이 비슷합니다: "${dup.slice(0,40)}..."`);
+      if (r.historyDupDate) dupNotes.push(`"${mdOnly(r.historyDupDate)}" 업무일지에도 토씨 하나 안 틀리고 같은 줄이 있어요 — 그날 이미 넣었다면 빼주세요.`);
+      r.dupNote = dupNotes.join(' ');
       r.note = r.notes.join(' ');
     });
 
