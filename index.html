@@ -1398,6 +1398,19 @@ const EXCLUDE_KEYWORDS = ['회의','미팅','면담','VC','스터디','테스트
   '계정확인','사이즈확인','우선순위','확인','조율','기타','기획전달'];
 
 const T_HISTORY_KEY = 'tracking-worklog-history';
+const T_SENT_KEY = 'tracking-sent-titles';
+
+/* 트래킹 시트 API 연결이 안 되거나 lookback 범위 밖이어도, 이 브라우저에서 이미
+   "A블록 복사"한 제목은 항상 기억해뒀다가 중복 확인에 같이 써서 같은 걸 또 적는 걸 막는다 */
+function t_loadSentTitles(){
+  try { return JSON.parse(localStorage.getItem(T_SENT_KEY) || '[]'); } catch (e) { return []; }
+}
+function t_rememberSent(rows){
+  const titles = rows.map(r => r.cols['업무 요청내용']).filter(Boolean);
+  if (!titles.length) return;
+  const merged = [...t_loadSentTitles(), ...titles].slice(-1000);
+  try { localStorage.setItem(T_SENT_KEY, JSON.stringify(merged)); } catch (e) {}
+}
 
 function t_loadSettings(){
   const saved = JSON.parse(localStorage.getItem(T_STORAGE_KEY) || '{}');
@@ -1781,10 +1794,10 @@ async function t_parse(){
     const rawText = $('t_rawText').value;
     const days = parseMultiDayText(rawText, defaultDate).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 
-    let existingTitles = [];
+    let existingTitles = t_loadSentTitles();
     try {
       const fetched = await t_fetchRecentRows();
-      if (fetched) existingTitles = fetched;
+      if (fetched) existingTitles = existingTitles.concat(fetched);
     } catch (e) {
       $('t_log').textContent = e.message;
     }
@@ -1999,7 +2012,11 @@ function t_bindEditTable(){
     const noOwner = live.filter(r => !String(r.cols['담당자'] || '').trim()).length;
     if (noOwner && !confirm(`담당자가 비어 있는 행이 ${noOwner}개 있어요.\n비어 있으면 시트의 "담당팀"이 #N/A가 돼요. 그래도 복사할까요?`)) return;
     const tsv = live.map(r => T_COLUMNS.map(c => String(r.cols[c] ?? '')).join('\t')).join('\n');
-    navigator.clipboard.writeText(tsv).then(() => { flashCopied(aBtn); toast(`A블록 ${live.length}행 복사 — 시트 "브랜드명" 칸에 붙여넣기`); });
+    navigator.clipboard.writeText(tsv).then(() => {
+      flashCopied(aBtn);
+      toast(`A블록 ${live.length}행 복사 — 시트 "브랜드명" 칸에 붙여넣기`);
+      t_rememberSent(live);
+    });
   };
   const bBtn = $('t_copyB');
   if (bBtn) bBtn.onclick = () => {
