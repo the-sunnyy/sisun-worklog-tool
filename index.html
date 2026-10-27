@@ -356,10 +356,8 @@
 
   #t_convertLogView .sub-details{ margin:10px 0; }
   #t_convertLogView .sub-details[open] > summary{ margin-bottom:8px; }
-  .convert-log-entry{ margin-bottom:10px; padding-left:12px; border-left:2px solid var(--border); }
-  .convert-log-entry:last-child{ margin-bottom:0; }
-  .convert-log-when{ font-size:11.5px; font-weight:700; color:var(--text-faint); margin-bottom:4px; }
-  .convert-log-entry pre{ margin:0; font-size:12px; white-space:pre-wrap; background:var(--surface-2); border-radius:8px; padding:8px 10px; max-height:160px; overflow-y:auto; }
+  .convert-log-lines{ margin:0; padding:10px 10px 10px 26px; background:var(--surface-2); border-radius:8px; max-height:220px; overflow-y:auto; }
+  .convert-log-lines li{ font-size:12px; line-height:1.6; color:var(--text-faint); }
 
   /* ================= 상태별 로그: 카드 하나, 상태 사이는 구분선 ================= */
   .card.status-board{ padding:4px 24px; }
@@ -1509,18 +1507,23 @@ function t_switchToDate(date){
 }
 
 /* 날짜 탭은 수정하면 덮어써져서 "전에 뭘 넣었더라"를 확인할 길이 없어지므로,
-   그 날짜로 "변환하기" 눌렀던 예전 원문을 접어둔 채로 따로 볼 수 있게 함 */
+   그 날짜로 "변환하기" 누를 때마다 나왔던 줄을 중복 없이 모아서 한 목록으로 보여줌
+   (누를 때마다 원문을 통째로 쌓으면 비슷한 내용이 반복돼 보기 헷갈려서, 줄 단위로 합쳐 한 번씩만 표시) */
 function t_renderConvertLogView(){
   const container = $('t_convertLogView');
   if (!container) return;
   const date = $('t_date').value;
-  const entries = t_loadConvertLog().filter(e => e.date === date).sort((a, b) => b.at.localeCompare(a.at));
+  const entries = t_loadConvertLog().filter(e => e.date === date).sort((a, b) => a.at.localeCompare(b.at));
   if (!entries.length) { container.innerHTML = ''; return; }
-  const items = entries.map(e => {
-    const when = new Date(e.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    return `<div class="convert-log-entry"><div class="convert-log-when">${esc(when)}</div><pre>${esc(e.text)}</pre></div>`;
-  }).join('');
-  container.innerHTML = `<details class="sub-details" open><summary>${ICON_CHEVRON_SM}이 날짜로 전에 "변환하기" 누른 기록 ${entries.length}건 — 뭘 이미 넣었는지 확인</summary>${items}</details>`;
+  const seen = new Map();
+  entries.forEach(e => {
+    e.text.split('\n').map(l => l.trim()).filter(Boolean).forEach(line => {
+      if (!seen.has(line)) seen.set(line, e.at);
+    });
+  });
+  const lines = [...seen.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  const items = lines.map(([line]) => `<li>${esc(line)}</li>`).join('');
+  container.innerHTML = `<details class="sub-details" open><summary>${ICON_CHEVRON_SM}이 날짜로 지금까지 변환했던 줄 ${lines.length}개 — 뭘 이미 넣었는지 확인</summary><ul class="convert-log-lines">${items}</ul></details>`;
 }
 
 function t_renderHistoryTabs(){
