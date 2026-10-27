@@ -2146,7 +2146,7 @@ $('t_date').addEventListener('change', () => t_switchToDate($('t_date').value));
 (() => {
   const ui = ui_load();
   if (ui.theme === 'light' || ui.theme === 'dark') document.documentElement.dataset.theme = ui.theme;
-  if (ui.tab === 'tracking' || ui.tab === 'media') switchTab(ui.tab);
+  /* 링크로 들어오면 항상 "시선 업무일지 정리"가 먼저 보이도록, 마지막에 보던 탭은 복원하지 않음 */
 })();
 
 window.onload = () => {
