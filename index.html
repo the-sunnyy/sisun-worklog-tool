@@ -1926,8 +1926,8 @@ function t_drawRows(){
     html += `<div class="edit-tools"><span class="edit-hint">✎ 칸을 눌러 바로 고칠 수 있어요. 고친 값 그대로 복사됩니다.</span>`;
     html += `<label class="mini-toggle"><input type="checkbox" id="t_showAll"${T_SHOW_ALL ? ' checked' : ''}> 모든 칸 보기</label></div>`;
 
-    html += '<div class="tbl-wrap"><table class="edit-table"><thead><tr><th>#</th><th>요청일</th><th>완료일</th>';
-    html += cols.map(c => `<th class="${T_NUM_COLS.has(c) ? 'num' : ''}">${c}</th>`).join('') + '<th></th></tr></thead><tbody>';
+    html += '<div class="tbl-wrap"><table class="edit-table"><thead><tr><th></th><th>#</th><th>요청일</th><th>완료일</th>';
+    html += cols.map(c => `<th class="${T_NUM_COLS.has(c) ? 'num' : ''}">${c}</th>`).join('') + '</tr></thead><tbody>';
     let n = 0;
     T_ROWS.forEach((r, i) => {
       if (r.removed) return;
@@ -1935,6 +1935,7 @@ function t_drawRows(){
       const cls = r.isDup ? 'flag-dup' : (r.needsReview ? 'flag-review' : '');
       const why = [r.isDup ? r.dupNote : '', r.note].filter(Boolean).join(' ');
       html += `<tr class="${cls}" data-i="${i}">`;
+      html += `<td><button class="row-del" data-del="${i}" title="이 행 빼기" aria-label="이 행 빼기">✕</button></td>`;
       html += `<td class="row-no">${n}${why ? `<span class="row-flag" title="${esc(why)}">!</span>` : ''}</td>`;
       html += `<td><input class="in-date" data-date="reqMd" value="${esc(r.reqMd)}" title="${esc((r.history || []).join(' · '))}"></td>`;
       html += `<td><input class="in-date" data-date="doneMd" value="${esc(r.doneMd)}"></td>`;
@@ -1946,7 +1947,7 @@ function t_drawRows(){
           html += `<td class="${T_NUM_COLS.has(c) ? 'num' : ''}"><input data-col="${esc(c)}" value="${esc(v)}"${T_NUM_COLS.has(c) ? ' inputmode="numeric"' : ''}></td>`;
         }
       });
-      html += `<td><button class="row-del" data-del="${i}" title="이 행 빼기" aria-label="이 행 빼기">✕</button></td></tr>`;
+      html += `</tr>`;
     });
     html += '</tbody></table></div>';
     if (removedCount) html += `<div class="removed-line">뺀 행 ${removedCount}개 · <button class="link-btn" id="t_restore">모두 되돌리기</button></div>`;
