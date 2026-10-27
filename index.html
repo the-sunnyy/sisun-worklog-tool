@@ -416,7 +416,7 @@
   .wl-text{ flex:1 1 300px; font-size:15px; color:var(--text-dim); font-variant-numeric:tabular-nums; }
   .wl-text b{ color:var(--text); font-weight:800; font-size:16px; }
   .wl-text i{ font-style:normal; color:var(--text-faint); margin:0 6px; }
-  .wl-sum, .wl-sum b{ color:var(--teal-ink) !important; font-weight:800; }
+  .wl-sum, .wl-sum b{ color:var(--danger) !important; font-weight:800; }
   .wl-row button.copy{ margin-left:auto; }
 
   /* 최종 집계 카드: 총집계 / 주간 보기 / 수요일 기준 버튼 */
@@ -1229,7 +1229,7 @@ function s_renderAggregate(aggregate, wed, tabName) {
 
 /* 수요일 기준: 한 주 = 한 줄, 비즈보드는 베리에 포함, 합계 행 없음 */
 function s_wedLineText(b){
-  return `신규 ${b.new}건 베리 ${b.veri + b.biz}건 영상 ${b.video}건 합 ${b.total}건`;
+  return `신규 ${b.new}건 베리 ${b.veri + b.biz}건 영상 ${b.video}건 총 ${b.total}건`;
 }
 function s_renderWedPane(wed) {
   const lines = wed.list.map(w => `${w.label} ${s_wedLineText(w)}`);
@@ -1239,7 +1239,7 @@ function s_renderWedPane(wed) {
     const t = (v) => `<b>${v}</b>`;
     html += `<div class="wl-row${w.current ? ' current' : ''}">`;
     html += `<div class="wl-period">${esc(w.label)}${w.current ? '<span class="badge s-teal">이번 주</span>' : ''}</div>`;
-    html += `<div class="wl-text">신규 ${t(w.new)}건&nbsp;&nbsp;베리 ${t(w.veri + w.biz)}건&nbsp;&nbsp;영상 ${t(w.video)}건&nbsp;&nbsp;<span class="wl-sum">합 ${t(w.total)}건</span></div>`;
+    html += `<div class="wl-text">신규 ${t(w.new)}건&nbsp;&nbsp;베리 ${t(w.veri + w.biz)}건&nbsp;&nbsp;영상 ${t(w.video)}건&nbsp;&nbsp;<span class="wl-sum">총 ${t(w.total)}건</span></div>`;
     html += `${s_copyBtn(lines[i])}</div>`;
   });
   html += '</div>';
