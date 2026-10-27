@@ -1520,7 +1520,7 @@ function t_renderConvertLogView(){
     const when = new Date(e.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     return `<div class="convert-log-entry"><div class="convert-log-when">${esc(when)}</div><pre>${esc(e.text)}</pre></div>`;
   }).join('');
-  container.innerHTML = `<details class="sub-details"><summary>${ICON_CHEVRON_SM}이 날짜로 전에 "변환하기" 누른 기록 ${entries.length}건 — 뭘 이미 넣었는지 확인</summary>${items}</details>`;
+  container.innerHTML = `<details class="sub-details" open><summary>${ICON_CHEVRON_SM}이 날짜로 전에 "변환하기" 누른 기록 ${entries.length}건 — 뭘 이미 넣었는지 확인</summary>${items}</details>`;
 }
 
 function t_renderHistoryTabs(){
