@@ -354,6 +354,13 @@
   .inline-toggle > summary:hover, .sub-details > summary:hover, details.fold-card > summary:hover{ color:var(--text); }
   .inline-toggle[open] > summary, details.fold-card[open] > summary{ margin-bottom:8px; }
 
+  #t_convertLogView .sub-details{ margin:10px 0; }
+  #t_convertLogView .sub-details[open] > summary{ margin-bottom:8px; }
+  .convert-log-entry{ margin-bottom:10px; padding-left:12px; border-left:2px solid var(--border); }
+  .convert-log-entry:last-child{ margin-bottom:0; }
+  .convert-log-when{ font-size:11.5px; font-weight:700; color:var(--text-faint); margin-bottom:4px; }
+  .convert-log-entry pre{ margin:0; font-size:12px; white-space:pre-wrap; background:var(--surface-2); border-radius:8px; padding:8px 10px; max-height:160px; overflow-y:auto; }
+
   /* ================= 상태별 로그: 카드 하나, 상태 사이는 구분선 ================= */
   .card.status-board{ padding:4px 24px; }
   .status-group + .status-group{ border-top:1px solid var(--border); }
@@ -699,6 +706,7 @@
       <div class="field" style="margin-top:16px;">
         <label for="t_rawText">업무 텍스트</label>
         <div id="t_historyTabs" class="history-tabs"></div>
+        <div id="t_convertLogView"></div>
         <textarea id="t_rawText" rows="14" placeholder="9/8
 - 지인페스타_키비주얼 신규 3종, 베리 5종 제작
 - 팀회의
@@ -1500,10 +1508,26 @@ function t_switchToDate(date){
   t_renderHistoryTabs();
 }
 
+/* 날짜 탭은 수정하면 덮어써져서 "전에 뭘 넣었더라"를 확인할 길이 없어지므로,
+   그 날짜로 "변환하기" 눌렀던 예전 원문을 접어둔 채로 따로 볼 수 있게 함 */
+function t_renderConvertLogView(){
+  const container = $('t_convertLogView');
+  if (!container) return;
+  const date = $('t_date').value;
+  const entries = t_loadConvertLog().filter(e => e.date === date).sort((a, b) => b.at.localeCompare(a.at));
+  if (!entries.length) { container.innerHTML = ''; return; }
+  const items = entries.map(e => {
+    const when = new Date(e.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return `<div class="convert-log-entry"><div class="convert-log-when">${esc(when)}</div><pre>${esc(e.text)}</pre></div>`;
+  }).join('');
+  container.innerHTML = `<details class="sub-details"><summary>${ICON_CHEVRON_SM}이 날짜로 전에 "변환하기" 누른 기록 ${entries.length}건 — 뭘 이미 넣었는지 확인</summary>${items}</details>`;
+}
+
 function t_renderHistoryTabs(){
   const history = t_loadHistory();
   const dates = Object.keys(history).sort().reverse();
   const activeDate = $('t_date').value;
+  t_renderConvertLogView();
   const container = $('t_historyTabs');
   if (dates.length === 0) { container.innerHTML = ''; return; }
   container.innerHTML = dates.map(date => {
@@ -1932,6 +1956,7 @@ async function t_parse(){
     });
 
     t_appendConvertLog(defaultDate, rawText);
+    t_renderConvertLogView();
     T_ROWS = rows;
     t_renderResult(rows, excluded);
   } catch (e) {
