@@ -1420,6 +1420,21 @@ function t_rememberSent(rows){
   try { localStorage.setItem(T_SENT_KEY, JSON.stringify(merged)); } catch (e) {}
 }
 
+const T_CONVERT_LOG_KEY = 'tracking-convert-log';
+
+/* 날짜 탭(업무 텍스트)은 수정하면 그 날짜 칸이 통째로 덮어써져서, 같은 날 다시 줄을 추가해
+   재변환하면 전에 변환했던 줄이 사라진 걸로 처리됨. "변환하기" 누를 때마다 그 순간의 원문을
+   따로 쌓아두고, 다음 번 변환에서 예전 변환분과 겹치는 줄을 찾아내는 데 쓴다. */
+function t_loadConvertLog(){
+  try { return JSON.parse(localStorage.getItem(T_CONVERT_LOG_KEY) || '[]'); } catch (e) { return []; }
+}
+function t_appendConvertLog(date, text){
+  if (!text.trim()) return;
+  const log = t_loadConvertLog();
+  log.push({ date, text, at: new Date().toISOString() });
+  try { localStorage.setItem(T_CONVERT_LOG_KEY, JSON.stringify(log.slice(-300))); } catch (e) {}
+}
+
 function t_loadSettings(){
   const saved = JSON.parse(localStorage.getItem(T_STORAGE_KEY) || '{}');
   $('t_owner').value = saved.owner || '노진선';  /* 비어 있으면 담당팀 수식(VLOOKUP)이 #N/A가 됨 */
@@ -1810,8 +1825,10 @@ async function t_parse(){
       $('t_log').textContent = e.message;
     }
 
-    /* 다른 날짜 탭(업무 텍스트 기록)에 토씨 하나까지 같은 줄이 있으면, 이미 그날 넣고 깜빡한 건 아닌지 신호로 씀 */
-    const otherHistory = Object.entries(t_loadHistory()).filter(([d]) => d !== defaultDate);
+    /* 다른 날짜 탭(지금 상태) + 예전 "변환하기" 때 적혀 있던 원문(탭을 나중에 고쳐 덮어썼어도 남아있음)에
+       토씨 하나까지 같은 줄이 있으면, 이미 그때 넣고 깜빡한 건 아닌지 신호로 씀 */
+    const otherHistory = Object.entries(t_loadHistory()).filter(([d]) => d !== defaultDate)
+      .concat(t_loadConvertLog().map(e => [e.date, e.text]));
     function t_findInOtherHistory(line){
       const needle = line.trim();
       if (!needle) return null;
@@ -1914,6 +1931,7 @@ async function t_parse(){
       r.note = r.notes.join(' ');
     });
 
+    t_appendConvertLog(defaultDate, rawText);
     T_ROWS = rows;
     t_renderResult(rows, excluded);
   } catch (e) {
