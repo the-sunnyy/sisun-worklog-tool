@@ -1632,10 +1632,14 @@ function classify(text, quantities, brand){
     }
     return result;
   }
-  if (/브랜드검색/.test(text) && has('영상')) {
+  if (/브랜드검색/.test(text)) {
+    /* 앰버서더형 브랜드검색은 항상 영상 소재 — 레벨 E / 사이즈 베리에이션 고정,
+       수량 표기가 없으면(차수만 적힌 경우 등) 썸네일 제작/이미지 베리 둘 다 1로 채움 */
+    const n = qty('영상') || qty('브랜드검색') || qty('신규') || qty('베리') || 1;
     result.level = 'E';
-    result.summary = '단순제작';
-    result.cols['영상 편집'] = qty('영상') + qty('신규');
+    result.summary = '사이즈 베리에이션';
+    result.cols['썸네일 제작'] = n;
+    result.cols['이미지 베리'] = n;
     result.suffix = '영상제작/베리';
     return result;
   }
