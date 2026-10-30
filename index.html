@@ -341,6 +341,9 @@
   .br-it{ background:var(--blue-soft); color:var(--blue-ink); }
   .br-ebm{ background:var(--green-soft); color:var(--green-ink); }
   .br-etc{ background:var(--sunken); color:var(--text-dim); }
+  .brand-ink-mi{ color:var(--rose-ink); }
+  .brand-ink-it{ color:var(--blue-ink); }
+  .brand-ink-ebm{ color:var(--green-ink); }
   .list-title{ font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; margin-bottom:6px; }
   .new-toggle > summary .list-title{ margin:0; color:var(--text); }
   .new-toggle[open] > summary{ margin-bottom:4px; }
@@ -1203,13 +1206,30 @@ function s_secHead(id, num, title, desc, tone){
 
 /* 로그 줄: 복사되는 문구 그대로 보여주되 [브랜드-기획전명] 부분만 강조 */
 /* items: [{line, dateLabel}] — 라이브 급한 순으로 이미 정렬된 상태로 들어옴. 날짜를 줄 앞에 배지로 보여줘서 정렬 기준이 눈에 보이게 함 */
+/* 괄호 안 "브랜드-기획전명"에서 브랜드만 색 입힘 (화면 표시용 — 복사되는 .line 텍스트는 그대로 검정) */
+function s_brandInkClass(brand){
+  return /잇미샤/.test(brand) ? 'brand-ink-it' : /미샤/.test(brand) ? 'brand-ink-mi' : /EBM/i.test(brand) ? 'brand-ink-ebm' : '';
+}
 function s_logHtml(items){
   return '<div class="log">' + items.map(it => {
     const line = typeof it === 'string' ? it : it.line;
     const dateLabel = typeof it === 'string' ? '' : (it.dateLabel || '');
     const tier = typeof it === 'string' ? '' : (it.ddayTier || '');
     const badge = dateLabel ? `<span class="log-date ${tier}">${esc(dateLabel)}</span>` : '';
-    return `<div class="log-line">${badge}${esc(line).replace(/\[([^\]]+)\]/, '<b>[$1]</b>')}</div>`;
+    const m = line.match(/^(.*?)\[([^\]]+)\](.*)$/);
+    let body;
+    if (m) {
+      const [, pre, label, post] = m;
+      const idx = label.indexOf('-');
+      const brand = idx === -1 ? label : label.slice(0, idx);
+      const rest = idx === -1 ? '' : label.slice(idx);
+      const cls = s_brandInkClass(brand);
+      const brandHtml = cls ? `<span class="${cls}">${esc(brand)}</span>` : esc(brand);
+      body = `${esc(pre)}<b>[${brandHtml}${esc(rest)}]</b>${esc(post)}`;
+    } else {
+      body = esc(line);
+    }
+    return `<div class="log-line">${badge}${body}</div>`;
   }).join('') + '</div>';
 }
 
