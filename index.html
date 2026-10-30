@@ -1112,14 +1112,20 @@ async function s_run() {
         veri: r[col.veri] || '',
         video: r[col.video] || '',
       };
+      const dateObj = s_rowDate(r[col.schedule] || '', year);
       const dateStr = extractLiveDate(r[col.schedule] || '', year) || '(날짜 미상)';
       const line = buildLogLine(row);
       const week = (r[col.week] || '').trim() || '주차 미상';
 
       if (!groups[status]) groups[status] = [];
-      groups[status].push({ line, week });
-      tableRows.push({ status, date: dateStr, label: `${row.brand}-${row.campaign}`, brand: row.brand.trim(), campaign: row.campaign.trim(), id: s_itemId(row) });
+      groups[status].push({ line, week, date: dateObj });
+      tableRows.push({ status, date: dateStr, dateObj, label: `${row.brand}-${row.campaign}`, brand: row.brand.trim(), campaign: row.campaign.trim(), id: s_itemId(row) });
     }
+
+    /* 라이브 급한 순(날짜 빠른 순)으로 정렬, 날짜 미상은 맨 뒤로 */
+    const s_dateCmp = (a, b) => (!a && !b) ? 0 : (!a ? 1 : (!b ? -1 : a - b));
+    tableRows.sort((a, b) => s_dateCmp(a.dateObj, b.dateObj));
+    Object.values(groups).forEach(items => items.sort((a, b) => s_dateCmp(a.date, b.date)));
 
     const aggregate = s_aggregate(values, headerIdx, col);
     const wedAgg = s_aggregateWed(values, headerIdx, col, year);
