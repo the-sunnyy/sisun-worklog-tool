@@ -372,6 +372,7 @@
   .log{ font-family:var(--mono); font-size:13px; line-height:1.7; }
   .log-line{ padding:3px 0; white-space:pre-wrap; word-break:break-word; color:var(--text-dim); }
   .log-line b{ color:var(--text); font-weight:700; }
+  .log-date{ display:inline-block; min-width:52px; margin-right:6px; font-size:11.5px; font-weight:700; color:var(--text-faint); }
   pre{ background:var(--surface-2); border-radius:10px; padding:12px 14px; font-size:13px; line-height:1.8; white-space:pre-wrap; word-break:break-word; font-family:var(--mono); margin:0; color:var(--text-dim); }
 
   /* ================= 집계 카드 ================= */
@@ -1118,7 +1119,7 @@ async function s_run() {
       const week = (r[col.week] || '').trim() || '주차 미상';
 
       if (!groups[status]) groups[status] = [];
-      groups[status].push({ line, week, date: dateObj });
+      groups[status].push({ line, week, date: dateObj, dateLabel: dateStr });
       tableRows.push({ status, date: dateStr, dateObj, label: `${row.brand}-${row.campaign}`, brand: row.brand.trim(), campaign: row.campaign.trim(), id: s_itemId(row) });
     }
 
@@ -1175,8 +1176,14 @@ function s_secHead(id, num, title, desc, tone){
 }
 
 /* 로그 줄: 복사되는 문구 그대로 보여주되 [브랜드-기획전명] 부분만 강조 */
-function s_logHtml(lines){
-  return '<div class="log">' + lines.map(l => `<div class="log-line">${esc(l).replace(/\[([^\]]+)\]/, '<b>[$1]</b>')}</div>`).join('') + '</div>';
+/* items: [{line, dateLabel}] — 라이브 급한 순으로 이미 정렬된 상태로 들어옴. 날짜를 줄 앞에 배지로 보여줘서 정렬 기준이 눈에 보이게 함 */
+function s_logHtml(items){
+  return '<div class="log">' + items.map(it => {
+    const line = typeof it === 'string' ? it : it.line;
+    const dateLabel = typeof it === 'string' ? '' : (it.dateLabel || '');
+    const badge = dateLabel ? `<span class="log-date">${esc(dateLabel)}</span>` : '';
+    return `<div class="log-line">${badge}${esc(line).replace(/\[([^\]]+)\]/, '<b>[$1]</b>')}</div>`;
+  }).join('') + '</div>';
 }
 
 /* 주차별 표 (최종 집계의 아코디언 안에 들어감) */
@@ -1332,14 +1339,14 @@ function s_renderResult(tableRows, groups, aggregate, wedAgg, tabName, hasBaseli
         const weekOrder = [];
         items.forEach(it => {
           if (!byWeek[it.week]) { byWeek[it.week] = []; weekOrder.push(it.week); }
-          byWeek[it.week].push(it.line);
+          byWeek[it.week].push(it);
         });
         weekOrder.forEach(week => {
-          const lines = byWeek[week];
-          html += `<div class="week-block"><div class="week-head"><h3>${esc(week)}<span class="count">${lines.length}건</span></h3>${s_copyBtn(lines.join('\n'))}</div>${s_logHtml(lines)}</div>`;
+          const weekItems = byWeek[week];
+          html += `<div class="week-block"><div class="week-head"><h3>${esc(week)}<span class="count">${weekItems.length}건</span></h3>${s_copyBtn(weekItems.map(it => it.line).join('\n'))}</div>${s_logHtml(weekItems)}</div>`;
         });
       } else {
-        html += s_logHtml(items.map(it => it.line));
+        html += s_logHtml(items);
       }
       html += '</div></div>';
     });
