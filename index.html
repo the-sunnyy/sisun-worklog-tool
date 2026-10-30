@@ -372,7 +372,11 @@
   .log{ font-family:var(--mono); font-size:13px; line-height:1.7; }
   .log-line{ padding:3px 0; white-space:pre-wrap; word-break:break-word; color:var(--text-dim); }
   .log-line b{ color:var(--text); font-weight:700; }
-  .log-date{ display:inline-block; min-width:92px; margin-right:6px; font-size:11.5px; font-weight:700; color:var(--text-faint); }
+  .log-date{ display:inline-flex; align-items:center; vertical-align:1px; margin-right:8px; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; background:var(--sunken); color:var(--text-faint); }
+  .log-date.t-urgent{ background:var(--rose-soft); color:var(--rose-ink); }
+  .log-date.t-soon{ background:var(--amber-soft); color:var(--amber-ink); }
+  .log-date.t-normal{ background:var(--teal-soft); color:var(--teal-ink); }
+  .log-date.t-far{ background:var(--sunken); color:var(--text-faint); }
   pre{ background:var(--surface-2); border-radius:10px; padding:12px 14px; font-size:13px; line-height:1.8; white-space:pre-wrap; word-break:break-word; font-family:var(--mono); margin:0; color:var(--text-dim); }
 
   /* ================= 집계 카드 ================= */
@@ -991,14 +995,24 @@ function s_aggregate(values, headerIdx, col) {
   return { byWeek, monthTotal };
 }
 
-/* 디데이 표시 (오늘 기준) */
-function s_ddayLabel(dateObj){
-  if (!dateObj) return '';
+/* 디데이 표시/중요도 (오늘 기준) */
+function s_ddayDiff(dateObj){
+  if (!dateObj) return null;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const target = new Date(dateObj); target.setHours(0, 0, 0, 0);
-  const diff = Math.round((target - today) / 86400000);
+  return Math.round((target - today) / 86400000);
+}
+function s_ddayLabel(diff){
+  if (diff === null) return '';
   if (diff === 0) return 'D-DAY';
   return diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`;
+}
+function s_ddayTier(diff){
+  if (diff === null) return 't-far';
+  if (diff <= 1) return 't-urgent';
+  if (diff <= 3) return 't-soon';
+  if (diff <= 7) return 't-normal';
+  return 't-far';
 }
 
 /* 제작 일정에서 기준 날짜: 라이브 날짜 우선, 없으면 첫 번째 날짜 */
@@ -1124,13 +1138,14 @@ async function s_run() {
         video: r[col.video] || '',
       };
       const dateObj = s_rowDate(r[col.schedule] || '', year);
-      const dday = s_ddayLabel(dateObj);
+      const ddayDiff = s_ddayDiff(dateObj);
+      const dday = s_ddayLabel(ddayDiff);
       const dateStr = (extractLiveDate(r[col.schedule] || '', year) || '(날짜 미상)') + (dday ? ` ${dday}` : '');
       const line = buildLogLine(row);
       const week = (r[col.week] || '').trim() || '주차 미상';
 
       if (!groups[status]) groups[status] = [];
-      groups[status].push({ line, week, date: dateObj, dateLabel: dateStr });
+      groups[status].push({ line, week, date: dateObj, dateLabel: dateStr, ddayTier: s_ddayTier(ddayDiff) });
       tableRows.push({ status, date: dateStr, dateObj, label: `${row.brand}-${row.campaign}`, brand: row.brand.trim(), campaign: row.campaign.trim(), id: s_itemId(row) });
     }
 
@@ -1192,7 +1207,8 @@ function s_logHtml(items){
   return '<div class="log">' + items.map(it => {
     const line = typeof it === 'string' ? it : it.line;
     const dateLabel = typeof it === 'string' ? '' : (it.dateLabel || '');
-    const badge = dateLabel ? `<span class="log-date">${esc(dateLabel)}</span>` : '';
+    const tier = typeof it === 'string' ? '' : (it.ddayTier || '');
+    const badge = dateLabel ? `<span class="log-date ${tier}">${esc(dateLabel)}</span>` : '';
     return `<div class="log-line">${badge}${esc(line).replace(/\[([^\]]+)\]/, '<b>[$1]</b>')}</div>`;
   }).join('') + '</div>';
 }
