@@ -1045,14 +1045,21 @@ function s_saveSettings(){
   }));
 }
 
+/* 탭 이름에 "11"처럼 숫자만 적으면 실제 시트 탭(보통 "11월")과 안 맞아 API가 400 에러를 냄 — 자동으로 "월"을 붙여줌 */
+function s_normalizeTabName(raw){
+  const v = raw.trim();
+  return /^\d{1,2}$/.test(v) ? `${v}월` : v;
+}
+
 async function s_run() {
   $('s_log').textContent = '';
   $('s_result').innerHTML = '';
   $('s_summary').innerHTML = '';
-  s_saveSettings();
 
   const sheetId = extractSheetId($('s_sheetId').value.trim());
-  const tabName = $('s_tabName').value.trim();
+  const tabName = s_normalizeTabName($('s_tabName').value);
+  $('s_tabName').value = tabName;
+  s_saveSettings();
   const apiKey = $('s_apiKey').value.trim();
   if (!sheetId || !tabName || !apiKey) {
     $('s_log').textContent = '시트 주소, 탭 이름, API 키를 모두 입력해주세요.';
