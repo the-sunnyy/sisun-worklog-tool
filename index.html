@@ -2030,7 +2030,7 @@ function t_drawRows(){
   } else {
     html += '<div class="card edit-card">';
     html += `<div class="card-title-row"><h2>트래킹 시트에 넣을 행 <span class="badge s-violet">${live.length}행</span></h2>`;
-    html += `<div class="head-actions"><button class="ghost" id="t_copyA">${ICON_COPY}① A블록 복사</button><button class="ghost" id="t_copyB">${ICON_COPY}② B블록 복사</button></div></div>`;
+    html += `<div class="head-actions"><button class="ghost" id="t_copyA">${ICON_COPY}① A블록 복사</button><button class="ghost" id="t_copyB">${ICON_COPY}② B블록 복사</button><button class="ghost" id="t_resetRows">초기화</button></div></div>`;
     html += '<div class="paste-steps">';
     html += '<span><b>①</b> 시트 빈 행의 <b>"브랜드명"</b> 칸 클릭 → A블록 붙여넣기</span>';
     html += '<span><b>②</b> 같은 행 <b>"요청일"</b> 칸 클릭 → B블록 붙여넣기 <em>(처리상태 칸은 건드리지 않기)</em></span>';
@@ -2102,6 +2102,13 @@ function t_bindEditTable(){
   });
   const restore = $('t_restore');
   if (restore) restore.onclick = () => { T_ROWS.forEach(r => { r.removed = false; }); t_drawRows(); };
+  const resetBtn = $('t_resetRows');
+  if (resetBtn) resetBtn.onclick = () => {
+    if (!confirm(`이 표의 ${T_ROWS.length}행을 전부 지울까요? (업무 텍스트는 그대로 남아있어요)`)) return;
+    T_ROWS = [];
+    T_EXCLUDED = [];
+    t_drawRows();
+  };
   const showAll = $('t_showAll');
   if (showAll) showAll.onchange = () => { T_SHOW_ALL = showAll.checked; t_drawRows(); };
 
