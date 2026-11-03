@@ -944,6 +944,25 @@ function extractLiveDate(scheduleText, year) {
   return formatDateWithDay(parseInt(match[1], 10), parseInt(match[2], 10), year);
 }
 
+/* 소재 유형 → 일지에 쓸 매체 이름. 기획전명에 매체가 안 드러나면(예: 8880EBMwintercp) [브랜드-기획전명-매체]로 씀
+   (2026-11-02 사용자: "여기에 인스타그램이 없다구" "매체가 써있어야지!") */
+function s_mediaName(materialType) {
+  const t = (materialType || '').replace(/\s+/g, ' ').trim();
+  if (/인스타|insta|메타|meta/i.test(t)) return '인스타그램';
+  if (/크리테오|criteo|rtb/i.test(t)) return '크리테오';
+  if (/pmax|퍼포먼스/i.test(t)) return '퍼포먼스맥스';
+  if (/서브\s*링크/.test(t)) return 'SA 서브링크';
+  if (/(^|[^a-z])sa([^a-z]|$)/i.test(t)) return 'SA 이미지';
+  if (/브랜드\s*검색|브검/.test(t)) return '브랜드검색';
+  return t;
+}
+function s_campaignHasMedia(campaign, media) {
+  const c = campaign.replace(/\s/g, '').toLowerCase();
+  const keys = { '인스타그램': ['인스타', 'insta', '메타', 'meta'], '크리테오': ['크리테오', 'criteo', 'rtb'], '퍼포먼스맥스': ['퍼포먼스', 'pmax'],
+    'SA 서브링크': ['서브링크'], 'SA 이미지': ['sa'], '브랜드검색': ['브랜드검색', '브검'] }[media] || [media.replace(/\s/g, '').toLowerCase()];
+  return keys.some(k => c.includes(k));
+}
+
 function buildLogLine(row) {
   const brand = row.brand.trim();
   const campaign = row.campaign.trim();
@@ -954,6 +973,9 @@ function buildLogLine(row) {
 
   let label = `${brand}-${campaign}`;
   let parts = [];
+  const isBizboard = materialType.includes('비즈보드');           // 비즈보드는 종수 쪽에 "비즈보드"가 이미 들어감
+  const media = s_mediaName(materialType);
+  if (media && !isBizboard && !s_campaignHasMedia(campaign, media)) label += `-${media}`;
 
   if (video > 0) parts.push(`영상 ${video}종`);
 
@@ -1747,13 +1769,6 @@ function classify(text, quantities, brand){
     result.cols[isNew ? '신규 이미지' : '이미지 베리'] = qty('영상');
     result.suffix = isNew ? '제작' : '베리';
     return result;
-  }
-  /* 9월 기록 기준 보정: SA 이미지(서브링크 아님)는 신규, 퍼포먼스맥스는 신규 1 + 베리 나머지 */
-  if (!has('신규') && has('베리') && /SA 이미지\]/.test(text) && !/서브링크/.test(text)) {
-    quantities = quantities.map(q => q.type === '베리' ? { type: '신규', n: q.n } : q);
-  } else if (!has('신규') && has('베리') && /퍼포먼스맥스/.test(text) && qty('베리') > 1) {
-    const n = qty('베리');
-    quantities = quantities.filter(q => q.type !== '베리').concat([{ type: '신규', n: 1 }, { type: '베리', n: n - 1 }]);
   }
   if (has('신규')) {
     result.level = 'A';
