@@ -1210,7 +1210,7 @@ async function s_run() {
 function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
 function s_aggRowText(label, b) {
-  return `${label} 신규 ${b.new}종, 베리 ${b.veri}종${b.template ? `, 템플릿 ${b.template}종` : ''}${b.biz ? `, 비즈보드 ${b.biz}종` : ''}${b.video ? `, 영상 ${b.video}종` : ''} (총 ${b.total}종)`;
+  return `${label} 신규 ${b.new}종${b.template ? `, 템플릿 ${b.template}종` : ''}, 베리 ${b.veri}종${b.biz ? `, 비즈보드 ${b.biz}종` : ''}${b.video ? `, 영상 ${b.video}종` : ''} (총 ${b.total}종)`;
 }
 
 /* 브랜드 칩: 미샤 빨강 · 잇미샤 파랑 · EBM 초록 (피그마 섹션 색점과 동일). "미샤, 잇미샤, EBM"처럼 여러 개면 칩 여러 개 */
@@ -1321,7 +1321,7 @@ function s_renderAggregate(aggregate, wed, tabName) {
 
 /* 수요일 기준: 한 주 = 한 줄, 비즈보드는 베리에 포함, 합계 행 없음 */
 function s_wedLineText(b){
-  return `신규 ${b.new}건 베리 ${b.veri + b.biz}건${b.template ? ` 템플릿 ${b.template}건` : ''} 영상 ${b.video}건 총 ${b.total}건`;
+  return `신규 ${b.new}건${b.template ? ` 템플릿 ${b.template}건` : ''} 베리 ${b.veri + b.biz}건 영상 ${b.video}건 총 ${b.total}건`;
 }
 function s_renderWedPane(wed) {
   const lines = wed.list.map(w => `${w.label} ${s_wedLineText(w)}`);
@@ -1332,7 +1332,7 @@ function s_renderWedPane(wed) {
     html += `<div class="wl-row${w.current ? ' current' : ''}">`;
     html += `<div class="wl-period">${esc(w.label)}${w.current ? '<span class="badge s-teal">이번 주</span>' : ''}</div>`;
     const templatePart = w.template ? `템플릿 ${t(w.template)}건&nbsp;&nbsp;` : '';
-    html += `<div class="wl-text">신규 ${t(w.new)}건&nbsp;&nbsp;베리 ${t(w.veri + w.biz)}건&nbsp;&nbsp;${templatePart}영상 ${t(w.video)}건&nbsp;&nbsp;<span class="wl-sum">총 ${t(w.total)}건</span></div>`;
+    html += `<div class="wl-text">신규 ${t(w.new)}건&nbsp;&nbsp;${templatePart}베리 ${t(w.veri + w.biz)}건&nbsp;&nbsp;영상 ${t(w.video)}건&nbsp;&nbsp;<span class="wl-sum">총 ${t(w.total)}건</span></div>`;
     html += `${s_copyBtn(lines[i])}</div>`;
   });
   html += '</div>';
