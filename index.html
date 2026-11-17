@@ -968,6 +968,7 @@ function buildLogLine(row) {
   const campaign = row.campaign.trim();
   const materialType = row.materialType || '';
   const image = parseInt(row.image, 10) || 0;
+  const template = parseInt(row.template, 10) || 0;
   const veri = parseInt(row.veri, 10) || 0;
   const video = parseInt(row.video, 10) || 0;
 
@@ -983,6 +984,7 @@ function buildLogLine(row) {
     parts.push(`비즈보드 ${(veri || image) * 2}종`);
   } else {
     if (image > 0) parts.push(`신규 ${image}종`);
+    if (template > 0) parts.push(`템플릿 ${template}종`);
     if (veri > 0) parts.push(`베리 ${veri}종`);
   }
 
@@ -990,10 +992,11 @@ function buildLogLine(row) {
   return `- 시선 [${label}] ${countsText}제작/전달`;
 }
 
-/* 행 하나의 신규/베리/비즈보드세트/영상 종수를 버킷에 더함 */
+/* 행 하나의 신규/템플릿/베리/비즈보드세트/영상 종수를 버킷에 더함 */
 function s_addCounts(b, r, col) {
   const materialType = r[col.materialType] || '';
   const image = parseInt(r[col.image], 10) || 0;
+  const template = parseInt(r[col.template], 10) || 0;
   const veri = parseInt(r[col.veri], 10) || 0;
   const video = parseInt(r[col.video], 10) || 0;
   if (materialType.includes('비즈보드') && materialType.includes('스마트채널')) {
@@ -1002,9 +1005,10 @@ function s_addCounts(b, r, col) {
   } else {
     b.new += image; b.veri += veri; b.total += image + veri;
   }
+  b.template += template; b.total += template;
   b.video += video; b.total += video;
 }
-const s_emptyBucket = () => ({ new: 0, veri: 0, biz: 0, video: 0, total: 0 });
+const s_emptyBucket = () => ({ new: 0, template: 0, veri: 0, biz: 0, video: 0, total: 0 });
 
 /* 완료 여부와 무관하게 전체 행을 주차별로 집계 (신규/베리/비즈보드세트/영상 종수) */
 function s_aggregate(values, headerIdx, col) {
@@ -1143,6 +1147,7 @@ async function s_run() {
       campaign: colIndex('기획전명'),
       materialType: colIndex('소재 유형'),
       image: colIndex('이미지'),
+      template: colIndex('템플릿'),
       veri: colIndex('베리'),
       video: colIndex('영상'),
     };
@@ -1162,6 +1167,7 @@ async function s_run() {
         campaign: r[col.campaign] || '',
         materialType: r[col.materialType] || '',
         image: r[col.image] || '',
+        template: r[col.template] || '',
         veri: r[col.veri] || '',
         video: r[col.video] || '',
       };
@@ -1204,7 +1210,7 @@ async function s_run() {
 function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
 function s_aggRowText(label, b) {
-  return `${label} 신규 ${b.new}종, 베리 ${b.veri}종${b.biz ? `, 비즈보드 ${b.biz}종` : ''}${b.video ? `, 영상 ${b.video}종` : ''} (총 ${b.total}종)`;
+  return `${label} 신규 ${b.new}종, 베리 ${b.veri}종${b.template ? `, 템플릿 ${b.template}종` : ''}${b.biz ? `, 비즈보드 ${b.biz}종` : ''}${b.video ? `, 영상 ${b.video}종` : ''} (총 ${b.total}종)`;
 }
 
 /* 브랜드 칩: 미샤 빨강 · 잇미샤 파랑 · EBM 초록 (피그마 섹션 색점과 동일). "미샤, 잇미샤, EBM"처럼 여러 개면 칩 여러 개 */
@@ -1263,15 +1269,15 @@ function s_logHtml(items){
 function s_weekTable(rows, total, totalLabel){
   const max = Math.max(1, ...rows.map(r => r.b.total));
   const n = (v) => v ? v : `<span class="zero">0</span>`;
-  let html = `<div class="tbl-wrap"><table class="stats-table"><thead><tr><th>주차</th><th class="num">신규</th><th class="num">베리</th><th class="num">비즈보드 세트</th><th class="num">영상</th><th class="num">합계</th></tr></thead><tbody>`;
+  let html = `<div class="tbl-wrap"><table class="stats-table"><thead><tr><th>주차</th><th class="num">신규</th><th class="num">템플릿</th><th class="num">베리</th><th class="num">비즈보드 세트</th><th class="num">영상</th><th class="num">합계</th></tr></thead><tbody>`;
   rows.forEach(r => {
     const b = r.b;
     const pct = Math.round((b.total / max) * 100);
     html += `<tr><td><div class="period">${esc(r.label)}</div></td>`;
-    html += `<td class="num">${n(b.new)}</td><td class="num">${n(b.veri)}</td><td class="num">${n(b.biz)}</td><td class="num">${n(b.video)}</td>`;
+    html += `<td class="num">${n(b.new)}</td><td class="num">${n(b.template)}</td><td class="num">${n(b.veri)}</td><td class="num">${n(b.biz)}</td><td class="num">${n(b.video)}</td>`;
     html += `<td class="num"><div class="bar-cell"><span class="bar"><i style="width:${pct}%"></i></span><b>${b.total}</b></div></td></tr>`;
   });
-  html += `<tr class="total"><td>${esc(totalLabel)}</td><td class="num">${total.new}</td><td class="num">${total.veri}</td><td class="num">${total.biz}</td><td class="num">${total.video}</td><td class="num"><div class="bar-cell"><b>${total.total}</b></div></td></tr>`;
+  html += `<tr class="total"><td>${esc(totalLabel)}</td><td class="num">${total.new}</td><td class="num">${total.template}</td><td class="num">${total.veri}</td><td class="num">${total.biz}</td><td class="num">${total.video}</td><td class="num"><div class="bar-cell"><b>${total.total}</b></div></td></tr>`;
   return html + '</tbody></table></div>';
 }
 
@@ -1295,7 +1301,7 @@ function s_renderAggregate(aggregate, wed, tabName) {
   /* 총집계 */
   html += `<div class="pane" data-pane="total"${show('total')}>`;
   html += `<div class="pane-top"><div class="pane-desc">완료 여부와 상관없이 이번 탭의 전체 행을 합산했습니다.</div>${s_copyBtn(sheetText, '요약 텍스트 복사')}</div>`;
-  const kpis = [['신규', m.new], ['베리', m.veri], ['비즈보드 세트', m.biz], ['영상', m.video]];
+  const kpis = [['신규', m.new], ['템플릿', m.template], ['베리', m.veri], ['비즈보드 세트', m.biz], ['영상', m.video]];
   html += '<div class="kpis">' + kpis.map(([label, v]) => `<div class="kpi"><div class="kpi-label">${label}</div><div class="kpi-value">${v}<span>종</span></div></div>`).join('');
   html += `<div class="kpi total"><div class="kpi-label">${esc(tabName)} 합계</div><div class="kpi-value">${m.total}<span>종</span></div></div></div>`;
   html += '</div>';
@@ -1315,7 +1321,7 @@ function s_renderAggregate(aggregate, wed, tabName) {
 
 /* 수요일 기준: 한 주 = 한 줄, 비즈보드는 베리에 포함, 합계 행 없음 */
 function s_wedLineText(b){
-  return `신규 ${b.new}건 베리 ${b.veri + b.biz}건 영상 ${b.video}건 총 ${b.total}건`;
+  return `신규 ${b.new}건 베리 ${b.veri + b.biz}건${b.template ? ` 템플릿 ${b.template}건` : ''} 영상 ${b.video}건 총 ${b.total}건`;
 }
 function s_renderWedPane(wed) {
   const lines = wed.list.map(w => `${w.label} ${s_wedLineText(w)}`);
@@ -1325,7 +1331,8 @@ function s_renderWedPane(wed) {
     const t = (v) => `<b>${v}</b>`;
     html += `<div class="wl-row${w.current ? ' current' : ''}">`;
     html += `<div class="wl-period">${esc(w.label)}${w.current ? '<span class="badge s-teal">이번 주</span>' : ''}</div>`;
-    html += `<div class="wl-text">신규 ${t(w.new)}건&nbsp;&nbsp;베리 ${t(w.veri + w.biz)}건&nbsp;&nbsp;영상 ${t(w.video)}건&nbsp;&nbsp;<span class="wl-sum">총 ${t(w.total)}건</span></div>`;
+    const templatePart = w.template ? `템플릿 ${t(w.template)}건&nbsp;&nbsp;` : '';
+    html += `<div class="wl-text">신규 ${t(w.new)}건&nbsp;&nbsp;베리 ${t(w.veri + w.biz)}건&nbsp;&nbsp;${templatePart}영상 ${t(w.video)}건&nbsp;&nbsp;<span class="wl-sum">총 ${t(w.total)}건</span></div>`;
     html += `${s_copyBtn(lines[i])}</div>`;
   });
   html += '</div>';
