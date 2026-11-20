@@ -1747,7 +1747,11 @@ function classify(text, quantities, brand){
   if (has('템플릿')) {
     result.level = 'B';
     result.summary = '템플릿 활용';
-    result.cols['템플릿 활용'] = qty('템플릿') || qty('베리') || 1;
+    result.cols['템플릿 활용'] = qty('템플릿') || 1;
+    if (has('베리')) {
+      result.cols['이미지 베리'] = qty('베리');
+      result.suffix = '활용/베리';
+    }
     return result;
   }
   if (has('썸네일')) {
