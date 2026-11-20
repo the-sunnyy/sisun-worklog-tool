@@ -199,7 +199,7 @@
   input::placeholder, textarea::placeholder{ color:var(--text-faint); }
   input:hover, textarea:hover{ border-color:var(--border-strong); }
   input:focus, textarea:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); background:var(--surface); }
-  textarea{ resize:vertical; font-family:var(--mono); font-size:13.5px; line-height:1.75; padding:14px 16px; }
+  textarea{ resize:vertical; font-family:var(--mono); font-size:13.5px; line-height:1.4; padding:14px 16px; }
   .input-lg{ font-size:17px !important; font-weight:700; padding:10px 14px !important; }
 
   .history-tabs{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
@@ -1633,6 +1633,7 @@ function detectBrand(text){
   if (/잇미샤/.test(text)) return '잇미샤';
   if (/미샤/.test(text)) return '미샤';
   if (/EBM/i.test(text)) return 'EBM';
+  if (/지마켓|G\s*마켓/i.test(text)) return 'G마켓';
   for (const b of KNOWN_BRANDS) { if (text.includes(b)) return b; }
   if (/\bLG\b/.test(text)) return 'LG전자';
   return '';
